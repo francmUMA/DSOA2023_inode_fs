@@ -8,6 +8,15 @@
 // #define N_DOBLES 1
 // #define N_TRIPLES 1
 
+typedef struct
+{
+    int id_node;
+    Name f_nombre;
+} file_register;
+
+typedef char Name[32];
+
+
 //Lista de bloques libres
 typedef struct Block *Free_blocks_list; // Mapa de bloques libres
 
@@ -15,6 +24,7 @@ typedef struct Block *Free_blocks_list; // Mapa de bloques libres
 struct Block{
     void *memory_address;
     int block_size;
+    // file_register files[32];
     Free_blocks_list next;
 };
 
@@ -25,7 +35,7 @@ typedef struct Inode *Free_inodes_list;
 struct Inode{
     char i_type;
     int i_tam;
-    int i_permission;
+    // int i_permission;
     int i_directos[N_DIRECTOS];
     int i_simple_ind[N_SIMPLES];
     // int i_double_ind[N_DOBLES];
