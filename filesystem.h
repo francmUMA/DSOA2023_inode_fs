@@ -8,10 +8,13 @@
 // #define N_DOBLES 1
 // #define N_TRIPLES 1
 
+#define NUM_BLOCKS 1000
+#define NUM_INODES 1000
+
 typedef struct
 {
     int id_node;
-    Name f_nombre;
+    char *f_nombre;
 } file_register;
 
 typedef char Name[32];
@@ -56,4 +59,13 @@ struct Superblock {
     unsigned char MODIFIED; // Por si es modificado el superbloque
 };
 
+//BITMAP DE BLOQUES
+struct Block_bitmap {
+    unsigned char bitmap[NUM_BLOCKS / 8];       //Se divide entre 8 porque cada byte tiene 8 bits, por lo que sería un array de 125 bytes.
+};
+
+//BITMAP DE INODOS
+struct Inode_bitmap{
+    unsigned char bitmap[NUM_INODES / 8]; 
+};
 
