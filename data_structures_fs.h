@@ -11,31 +11,49 @@
 #define NUM_BLOCKS 1000
 #define NUM_INODES 1000
 
-typedef struct
-{
-    int id_node;
-    char *f_nombre;
-} file_register;
 
-typedef char Name[32];
+
+
+//Directorios
+typedef struct {
+    int id_node;
+    char name[32];
+    struct inode *inode;
+} directory_entry;
+
+struct directory_table{
+    directory_entry directory_list[32];
+};
+
+struct _directory_table{                    //Tabla de indirectos simples
+    directory_table directory_list[256];
+};
+
+struct __directory_table{                   //Tabla de indirectos dobles
+    _directory_table directory_list[256];
+};
+
+struct ___directory_table{                  //Tabla de indirectos triples
+    __directory_table directory_list[1];
+};
+
 
 
 //Lista de bloques libres
-typedef struct Block *Free_blocks_list; // Mapa de bloques libres
+typedef struct block *Free_blocks_list; 
 
 //Descriptor de bloque
-struct Block{
+struct block{
     void *memory_address;
     int block_size;
-    // file_register files[32];
     Free_blocks_list next;
 };
 
 //Lista de inodos libres
-typedef struct Inode *Free_inodes_list;
+typedef struct inode *Free_inodes_list;
 
 //Inodo
-struct Inode{
+struct inode{
     char i_type;
     int i_tam;
     // int i_permission;
@@ -48,24 +66,24 @@ struct Inode{
 
 
 //SUPERBLOQUE
-struct Superblock {
+struct superblock {
     int size;
     long free_blocks;
     Free_blocks_list free_blocks_list;
-    Block next_free_block;
+    struct block next_free_block;
     long inode_list_size;
     Free_inodes_list free_inodes_list;
-    Inode next_free_inode;
+    struct inode next_free_inode;
     unsigned char MODIFIED; // Por si es modificado el superbloque
 };
 
 //BITMAP DE BLOQUES
-struct Block_bitmap {
+struct block_bitmap {
     unsigned char bitmap[NUM_BLOCKS / 8];       //Se divide entre 8 porque cada byte tiene 8 bits, por lo que sería un array de 125 bytes.
 };
-
+  
 //BITMAP DE INODOS
-struct Inode_bitmap{
+struct inode_bitmap{
     unsigned char bitmap[NUM_INODES / 8]; 
 };
 
