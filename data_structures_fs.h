@@ -5,38 +5,17 @@
 
 #define N_DIRECTOS 10
 #define N_SIMPLES 1
-// #define N_DOBLES 1
-// #define N_TRIPLES 1
+#define N_DOBLES 1
+#define N_TRIPLES 1
 
 #define NUM_BLOCKS 1000
 #define NUM_INODES 1000
 
-
-
-
 //Directorios
-typedef struct {
-    int id_node;
-    char name[32];
+typedef struct { 
+    char name[24];
     struct inode *inode;
 } directory_entry;
-
-struct directory_table{
-    directory_entry directory_list[32];
-};
-
-struct _directory_table{                    //Tabla de indirectos simples
-    directory_table directory_list[256];
-};
-
-struct __directory_table{                   //Tabla de indirectos dobles
-    _directory_table directory_list[256];
-};
-
-struct ___directory_table{                  //Tabla de indirectos triples
-    __directory_table directory_list[1];
-};
-
 
 
 //Lista de bloques libres
@@ -61,13 +40,13 @@ struct inode{
     int i_simple_ind[N_SIMPLES];
     // int i_double_ind[N_DOBLES];
     // int i_triple_ind[N_TRIPLES];
-    char i_relleno [20]; // Darle vueltas
+    char i_relleno [20]; 
 };
 
 
 //SUPERBLOQUE
 struct superblock {
-    int size;
+
     long free_blocks;
     Free_blocks_list free_blocks_list;
     struct block next_free_block;
