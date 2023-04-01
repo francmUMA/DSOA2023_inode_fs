@@ -13,10 +13,21 @@ static struct inode *inode_search(char *target, struct inode directory){
      * con _inode_search(*target, ..., &found)
      * 4. Una vez se encuentra, se devuelve el inodo. En caso contrario, se sigue buscando hasta que termina y se devulve NULL.
      */
-    return NULL;
+    uint8_t found = 0;
+    return _inode_search(target,directory,&found);
 }
 
 static struct inode *_inode_search(char *target, struct inode directory, uint8_t *found){
-  
+    int i = 0;
+    directory_entry entry;
+    while(i < N_DIRECTOS && !found && directory.i_directos[i] != NULL){
+        // Mapeo del bloque 
+        
+        // Recorremos el bloque
+        // Para cada elemento comprobar si es target
+        // Si es target hacemos return del inodo. Si no es, comprobamos si es directorio o archivo. En caso de ser directorio
+        // entramos en el mismo. Continuamos en caso contrario.
+
+    }
     return NULL;
 }

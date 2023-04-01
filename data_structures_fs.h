@@ -36,11 +36,11 @@ struct inode{
     char i_type;
     int i_tam;
     // int i_permission;
-    int i_directos[N_DIRECTOS];
+    int i_directos[N_DIRECTOS]; // Cambiar tipo a long
     int i_simple_ind[N_SIMPLES];
     // int i_double_ind[N_DOBLES];
     // int i_triple_ind[N_TRIPLES];
-    char i_relleno [20]; 
+    // char i_relleno [20]; 
 };
 
 
