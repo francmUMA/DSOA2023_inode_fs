@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 //Creacion de un inodo asignando el primer inodo libre en el bitmap de inodos
 //Se devuelve el inodo creado
 //Si no hay inodos libres, se devuelve NULL
