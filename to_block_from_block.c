@@ -18,7 +18,7 @@ int main()
     strcpy(test_fran->name, "prueba_search.txt"); // Guardo el nombre
 
     test_fran->inode = inodo;
-
+    
     //Guardar en el mismo bloque de memoria la entrada de directorio dos veces.
     long block_mem = malloc(1024); // Primer bloque
     memcpy(block_mem,test_fran,sizeof(directory_entry));

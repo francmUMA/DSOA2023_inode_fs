@@ -9,7 +9,7 @@
 static struct inode *inode_search(char *target, struct inode directory){
     int i = 0;
     struct inode *res = malloc(sizeof(struct inode));
-    *res = NULL;
+    res = NULL;
     directory_entry *entry = malloc(sizeof(directory_entry));
     while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
         // Recorremos el bloque
@@ -24,7 +24,7 @@ static struct inode *inode_search(char *target, struct inode directory){
 
             // En caso de ser directorio entramos en el mismo. Continuamos en caso contrario.
             else if(entry->inode->i_type == 'd' && (res = inode_search(target, *entry->inode)) != NULL){
-                return res;
+                return res; // Devuelve el inodo del archivo buscado (recursivamente)
             }
         }
         i++;    
