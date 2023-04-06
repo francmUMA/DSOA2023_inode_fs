@@ -31,7 +31,7 @@ int main()
     //Acceder a las entradas de directorio del bloque de memoria
     directory_entry *traido_mem = malloc(sizeof(directory_entry));
     memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
-    // printf("Entrada: %s", traido_mem->name);
+    printf("Entrada: %c", traido_mem->inode->i_type);
     /*
     memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
     printf("Entrada: %s", traido_mem->name);

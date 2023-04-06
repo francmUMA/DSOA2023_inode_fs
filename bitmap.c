@@ -30,8 +30,8 @@ int free_inode(struct inode_bitmap *inode_bitmap){
     //Ahora buscamos el primer bit que es 0
     int bit = 7;
 
-    //Creamos un auxiliar para no modificar el valor de byte
-    unsigned char aux = (*inode_bitmap).bitmap[byte];            //Es mas eficiente
+    //Creamos un auxiliar por eficiencia
+    unsigned char aux = (*inode_bitmap).bitmap[byte];
     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
         bit--;
     }
@@ -51,8 +51,8 @@ int free_block(struct block_bitmap *block_bitmap){
     //Ahora buscamos el primer bit que es 0
     int bit = 7;
 
-    //Creamos un auxiliar para no modificar el valor de byte
-    unsigned char aux = (*block_bitmap).bitmap[byte];            //Es mas eficiente
+    //Creamos un auxiliar por eficiencia
+    unsigned char aux = (*block_bitmap).bitmap[byte];
     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
         bit--;
     }

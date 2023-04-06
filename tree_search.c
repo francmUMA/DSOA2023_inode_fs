@@ -13,8 +13,9 @@ static struct inode *inode_search(char *target, struct inode directory){
     directory_entry *entry = malloc(sizeof(directory_entry));
     while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
         // Recorremos el bloque
-        for(int j = 0; j < 32; j++){ // j es offset
-            memcpy(directory.i_directos[i]+sizeof(directory_entry)*j, entry, sizeof(directory_entry));
+        memcpy(entry, directory.i_directos[i], sizeof(directory_entry));
+        for(int j = 0; j < 32 && entry -> inode != NULL; j++){ // j es offset
+            memcpy(entry, directory.i_directos[i]+sizeof(directory_entry)*j, sizeof(directory_entry));
 
             // Para cada elemento comprobar si es target
             if(strcmp(entry->name,target) == 0){
