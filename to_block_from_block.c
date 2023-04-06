@@ -22,7 +22,7 @@ int main()
     //Guardar en el mismo bloque de memoria la entrada de directorio dos veces.
     long block_mem = malloc(1024); // Primer bloque
     memcpy(block_mem,test_fran,sizeof(directory_entry));
-    memcpy(block_mem+sizeof(directory_entry),test_fran,sizeof(directory_entry));
+    // memcpy(block_mem+sizeof(directory_entry),test_fran,sizeof(directory_entry));
 
 
     //Mostrar el bloque donde se ha mapeado
@@ -30,8 +30,9 @@ int main()
 
     //Acceder a las entradas de directorio del bloque de memoria
     directory_entry *traido_mem = malloc(sizeof(directory_entry));
-    memcpy(traido_mem,block_mem,sizeof(directory_entry));
-    printf("Entrada: %s", traido_mem->name);
+    memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
+    // printf("Entrada: %s", traido_mem->name);
+    /*
     memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
     printf("Entrada: %s", traido_mem->name);
 
@@ -39,4 +40,5 @@ int main()
     memset(&block_mem+sizeof(directory_entry),0,sizeof(directory_entry));
     memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
     printf("Entrada: %s", traido_mem->name);
+    */
 }
