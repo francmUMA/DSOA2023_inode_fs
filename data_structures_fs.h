@@ -50,10 +50,8 @@ struct inode{
 struct superblock {
     long free_blocks;
     Free_blocks_list free_blocks_list;
-    // struct block next_free_block; Haría falta realmente????
     long inode_list_size;
     Free_inodes_list free_inodes_list;
-    // struct inode next_free_inode; El proximo inodo libre nos lo da el inode_bitmap, no?
     unsigned char MODIFIED; // Por si es modificado el superbloque
 };
 
