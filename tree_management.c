@@ -16,7 +16,7 @@ void insert(struct inode *directory_dst, struct inode n_node) // Versión 1 (Com
         for(int j = 0; j < 32 && (entry -> inode) != NULL; j++){
             //Traemos la entrada de directorio
             offset = sizeof(directory_entry)*j;
-            memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(directory_entry));
+            memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(directory_entry)); // Preguntar Fran dudilla offset
         }
         // Nos aseguramos de que nuestra entrada es null
         if (entry->inode == NULL)

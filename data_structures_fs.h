@@ -34,7 +34,7 @@ typedef struct inode *Free_inodes_list;
 //Inodo
 struct inode{
     int i_num;
-    char i_name[24];
+    char i_name[24]; // Preguntar
     char i_type;
     int i_tam;
     // int i_permission;
