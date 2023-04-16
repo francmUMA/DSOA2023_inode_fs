@@ -1,5 +1,4 @@
 #include "data_structures_fs.h"
-#include "bitmap.c"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,16 +7,20 @@
 //Se devuelve el inodo creado
 //Si no hay inodos libres, se devuelve NULL
 //Hay que buscar el primer inodo libre con la funcion creada en bitmap.c
-//Se utiliza la estructura struct inode para crear el inodo y se le pasan los campos por parametro
+//Se utiliza la estructura struct inode_fs para crear el inodo y se le pasan los campos por parametro
 
-struct inode *create_inode(char type, char *name,  struct inode_bitmap *inode_bitmap){
-    struct inode *new_inode = malloc(sizeof(struct inode));
-    int i_directos[N_DIRECTOS], i_simples[N_SIMPLES];
+struct inode_fs *create_inode(char type, char *name,  struct inode_bitmap_fs *inode_bitmap){
+    struct inode_fs *new_inode = malloc(sizeof(struct inode_fs));
     new_inode -> i_type = type;
     new_inode -> i_tam = 0;
     strcpy(new_inode -> i_name, name);
     new_inode -> i_num = free_inode(inode_bitmap);
-    *new_inode -> i_directos = i_directos;
-    *new_inode -> i_simple_ind = i_simples;
     return new_inode;
+}
+
+//Creación del inodo root
+struct inode_fs *create_root(struct inode_bitmap_fs *inode_bitmap){
+    struct inode_fs *root = create_inode('d', "/", inode_bitmap);
+    insert(".", root, *root);
+    return root;
 }
