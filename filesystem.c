@@ -15,6 +15,8 @@ int main(){
     struct inode_fs *root = create_root(inode_bitmap);
     print_directory(*root);
 
+    struct inode_fs *dir = inode_search(".", *root);
+
     //Creamos el directorio /home
     touch("home", 'd', ".", root, inode_bitmap);
     print_directory(*root);
