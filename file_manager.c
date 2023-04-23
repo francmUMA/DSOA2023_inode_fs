@@ -21,14 +21,14 @@ void touch(char *name, char type, char *directory,  struct inode_fs *root, struc
     
     // Create the file
     struct inode_fs *new_file = create_inode(type, name, inode_bitmap);
-    
-    // Add the file to the directory
-    insert(name, dir, *new_file);
     if (type == 'd'){
         // Create the . and .. entries
-        insert(".",  new_file, *new_file);
-        insert("..", new_file, *dir);
+        insert(".",  new_file, new_file);
+        insert("..", new_file, dir);
     }  
+
+    // Add the file to the directory
+    insert(name, dir, new_file); 
 }
 
 // Print the directory tree

@@ -84,6 +84,6 @@ void print_directory(struct inode_fs );
 
 //tree_manager.c
 struct inode_fs *inode_search(char *, struct inode_fs);
-void insert(char *, struct inode_fs *, struct inode_fs );
+void insert(char *, struct inode_fs *, struct inode_fs *);
 
 #endif

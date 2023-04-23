@@ -16,16 +16,14 @@ struct inode_fs *inode_search(char *target, struct inode_fs directory){
         // Recorremos el bloque
         memcpy(entry, directory.i_directos[i], sizeof(struct directory_entry));
         for(int j = 1; j < 32 && entry -> inode != NULL; j++){ // j es offset
-            
             // Para cada elemento comprobar si es target
             if(strcmp((*entry).name,target) == 0){
                 // Si es target hacemos return del inodo.
-                free(res);
                 return (*entry).inode;
             }
 
             // En caso de ser directorio entramos en el mismo. Continuamos en caso contrario.
-            else if((*(*entry).inode).i_type == 'd' && (res = inode_search(target, (*(*entry).inode))) != NULL){
+            else if((*(*entry).inode).i_type == 'd' && strcmp((*entry).name,".") != 0 && strcmp((*entry).name,"..") != 0 && (res = inode_search(target, *(*entry).inode) != NULL)){
                 return res; // Devuelve el inodo del archivo buscado (recursivamente)
             }
 
@@ -37,7 +35,7 @@ struct inode_fs *inode_search(char *target, struct inode_fs directory){
 }
 
 // Tengo que modificar nuestra estructura de árbol de búsqueda
-void insert(char *name, struct inode_fs *directory_dst, struct inode_fs n_node) // Versión 1 (Como si solo tuvieramos directos)
+void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node) // Versión 1 (Como si solo tuvieramos directos)
 {
     int i = 0, end = 0, offset;
     struct directory_entry *entry = malloc(sizeof(struct directory_entry));
@@ -45,10 +43,10 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs n_node) 
         // Vamos a buscar el primer hueco libre en el bloque
         // Recorremos el bloque
         memcpy(entry, (*directory_dst).i_directos[i], sizeof(struct directory_entry));
-        for(int j = 0; j < 32 && (entry -> inode) != NULL; j++){
+        for(int j = 1; j < 32 && (entry -> inode) != NULL; j++){
             //Traemos la entrada de directorio
             offset = sizeof(struct directory_entry)*j;
-            memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(struct directory_entry)); // Preguntar Fran dudilla offset
+            memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(struct directory_entry)); 
         }
         // Nos aseguramos de que nuestra entrada es null
         if (entry->inode == NULL)
@@ -56,11 +54,9 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs n_node) 
             // Guardamos nuestra entrada de bloque
             strcpy(entry->name, name);
 
-            entry->inode = &n_node;
+            entry->inode = n_node;
             // Copiado el bloque
             memcpy((*directory_dst).i_directos[i]+offset, entry,sizeof(struct directory_entry));
-            entry = NULL;
-            free(entry);
             end = 1;
         }
         i++;
@@ -75,10 +71,10 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs n_node) 
         strcpy(entry->name, name);
 
         // Si son n_node es el mismo inodo que directory_dst, se guarda en la entry el directory_dst
-        if (n_node.i_num == (*directory_dst).i_num){
+        if ((*n_node).i_num == (*directory_dst).i_num){
             entry->inode = directory_dst;
         } else {
-            entry->inode = &n_node;
+            entry->inode = n_node;
         }
 
         // Copiado el bloque    

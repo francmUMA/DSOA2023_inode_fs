@@ -21,6 +21,6 @@ struct inode_fs *create_inode(char type, char *name,  struct inode_bitmap_fs *in
 //Creación del inodo root
 struct inode_fs *create_root(struct inode_bitmap_fs *inode_bitmap){
     struct inode_fs *root = create_inode('d', "/", inode_bitmap);
-    insert(".", root, *root);
+    insert(".", root, root);
     return root;
 }
