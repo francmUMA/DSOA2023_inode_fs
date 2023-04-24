@@ -4,16 +4,16 @@
 #include <string.h>
 
 // Create a new file with the given name in the given directory
-void touch(char *name, char type, char *directory,  struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
+void touch(char *name, char type, char *path_directory,  struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
     // Search for the directory
-    struct inode_fs *dir = inode_search(directory, *root);
+    struct inode_fs *dir = search_directory(path_directory, *root);
     if(dir == NULL){
         printf("Directory not found\n");
         return;
     }
 
     // Search for the file
-    struct inode_fs *file = inode_search(name, *dir);
+    struct inode_fs *file = search_in_directory(name, *dir);
     if(file != NULL){
         printf("File already exists\n");
         return;
@@ -56,16 +56,16 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
     }
 }
 
-void rm(char *name, char *directory, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
+void rm(char *name, char *path_directory, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
     // Search for the directory
-    struct inode_fs *dir = inode_search(directory, *root);
+    struct inode_fs *dir = search_directory(path_directory, *root);
     if(dir == NULL){
         printf("Directory not found\n");
         return;
     }
 
     // Search for the file
-    struct inode_fs *file = inode_search(name, *dir);
+    struct inode_fs *file = search_in_directory(name, *dir);
     if(file == NULL){
         printf("File not found\n");
         return;

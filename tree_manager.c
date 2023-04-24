@@ -127,7 +127,7 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
 }
 
 // Función para buscar un inodo en un directorio concreto
-struct inode_fs *search_directory(char *target, struct inode_fs directory){
+struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     //Creamos el inodo que vamos a devolver
     struct inode_fs *res = malloc(sizeof(struct inode_fs));
     res = NULL;
@@ -164,7 +164,7 @@ struct inode_fs *search(char *path, char* target,struct inode_fs root)
     
     while(token != NULL){
         // Buscamos el inodo en el directorio actual
-        current_dir = search_directory(token, *current_dir);
+        current_dir = search_in_directory(token, *current_dir);
 
         if(current_dir == NULL || current_dir->i_type != 'd') {
             printf("No se ha encontrado el directorio\n");
@@ -174,4 +174,23 @@ struct inode_fs *search(char *path, char* target,struct inode_fs root)
     }
 
     return search_directory(target, *current_dir);
+}
+
+struct inode_fs *search_directory(char *path, struct inode_fs root){
+    // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
+    struct inode_fs *current_dir = malloc(sizeof(struct inode_fs));
+    char *token = strtok(path, "/");
+    current_dir = search_in_directory(token, root);
+
+    while(token != NULL){
+        if(current_dir == NULL || current_dir->i_type != 'd') {
+            printf("No se ha encontrado el directorio\n");
+            return NULL;
+        } 
+        token = strtok(NULL, "/");
+        if (token != NULL){
+            current_dir = search_in_directory(token, *current_dir);
+        }
+    }
+    return current_dir;
 }

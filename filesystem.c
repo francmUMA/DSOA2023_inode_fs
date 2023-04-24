@@ -18,18 +18,18 @@ int main(){
     touch("home", 'd', ".", root, inode_bitmap);
 
     //Creamos el directorio /home/usuario
-    touch("usuario", 'd', "home", root, inode_bitmap);
+    touch("usuario", 'd', "./home", root, inode_bitmap);
 
     //Creamos el directorio /home/usuario/Desktop
-    touch("Desktop", 'd', "usuario", root, inode_bitmap);
+    touch("Desktop", 'd', "./home/usuario", root, inode_bitmap);
 
     //Creamos el directorio /dev
     touch("dev", 'd', ".", root, inode_bitmap);
 
     //Creamos el archivo diego_cipote.txt
-    touch("diego_cipote.txt", '-', "Desktop", root, inode_bitmap);
+    touch("diego_cipote.txt", '-', "./home/usuario/Desktop", root, inode_bitmap);
     print_directory(*root);
 
-    rm("diego_cipote.txt", "Desktop", root, inode_bitmap);
+    rm("diego_cipote.txt", "./home/usuario/Desktop", root, inode_bitmap);
     print_directory(*root);
 }
