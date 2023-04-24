@@ -56,3 +56,27 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
     }
 }
 
+void rm(char *name, char *directory, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
+    // Search for the directory
+    struct inode_fs *dir = inode_search(directory, *root);
+    if(dir == NULL){
+        printf("Directory not found\n");
+        return;
+    }
+
+    // Search for the file
+    struct inode_fs *file = inode_search(name, *dir);
+    if(file == NULL){
+        printf("File not found\n");
+        return;
+    } else if ((*file).i_type == 'd'){
+        printf("Cannot remove a directory\n");
+        return;
+    }
+
+    // Remove the file from the directory
+    remove_entry(name, dir);
+
+    // Remove the file
+    remove_inode(file, inode_bitmap);
+}

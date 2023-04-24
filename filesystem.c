@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "bitmap.c"
-#include "create_inode.c"
+#include "inode.c"
 #include "file_manager.c"
 #include "tree_manager.c"
 
@@ -13,13 +13,9 @@ int main(){
 
     //Creamos el inodo root
     struct inode_fs *root = create_root(inode_bitmap);
-    print_directory(*root);
-
-    struct inode_fs *dir = inode_search(".", *root);
 
     //Creamos el directorio /home
     touch("home", 'd', ".", root, inode_bitmap);
-    print_directory(*root);
 
     //Creamos el directorio /home/usuario
     touch("usuario", 'd', "home", root, inode_bitmap);
@@ -30,6 +26,10 @@ int main(){
     //Creamos el directorio /dev
     touch("dev", 'd', ".", root, inode_bitmap);
 
-    //Printeamos el arbol
+    //Creamos el archivo diego_cipote.txt
+    touch("diego_cipote.txt", '-', "Desktop", root, inode_bitmap);
+    print_directory(*root);
+
+    rm("diego_cipote.txt", "Desktop", root, inode_bitmap);
     print_directory(*root);
 }

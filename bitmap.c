@@ -36,6 +36,13 @@ int free_inode(struct inode_bitmap_fs *inode_bitmap){
     return (byte * 8) + (8 - bit);
 }
 
+//Limpiar un inodo del bitmap de inodos
+void remove_inode_bitmap(struct inode_bitmap_fs *inode_bitmap, int inode){
+    int byte = inode / 8;
+    int bit = 7 - (inode % 8);
+    (*inode_bitmap).bitmap[byte] &= ~(1 << bit);
+}
+
 //Repetir el mismo proceso para el bitmap de bloques
 // int free_block(struct block_bitmap *block_bitmap){
 //     int byte = 0;

@@ -24,3 +24,20 @@ struct inode_fs *create_root(struct inode_bitmap_fs *inode_bitmap){
     insert(".", root, root);
     return root;
 }
+
+// Eliminación de un inodo
+void remove_inode(struct inode_fs *inode, struct inode_bitmap_fs *inode_bitmap){
+    // Eliminamos el inodo del bitmap
+    remove_inode_bitmap(inode_bitmap, inode->i_num);
+    
+    // Limpiar todos los bloques del inodo
+    // Recorremos cada bloque y pones cada entrada a 0
+    for(int i = 0; i < N_DIRECTOS && inode -> i_directos[i] != NULL; i++){
+        memset(inode -> i_directos[i], 0, 1024);
+        inode -> i_directos[i] = NULL;
+    }
+
+    //Liberamos el inodo
+    free(inode);
+    inode = NULL;
+}
