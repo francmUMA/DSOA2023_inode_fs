@@ -80,3 +80,35 @@ void rm(char *name, char *path_directory, struct inode_fs *root, struct inode_bi
     // Remove the file
     remove_inode(file, inode_bitmap);
 }
+
+// Borrar directorio vacío
+void rmdir(char* path, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap)
+{
+    struct inode_fs *current_dir = search_directory(path, root);
+    
+    if(current_dir == NULL) {
+        printf("No se ha encontrado el directorio\n");
+        return;
+    }
+
+    int i = 0;
+    // Comprobamos que el directorio está vacío
+    while(i < N_DIRECTOS && (*current_dir).i_directos[i] == NULL){
+        i++;
+    }
+
+    if(i == N_DIRECTOS){
+        // Esta vacío
+        // Eliminamos la entrada de directorio
+        remove_entry(path, root);
+        // Liberamos el inodo
+        remove_inode(current_dir,inode_bitmap);
+    }
+}
+
+
+// Sobreescribir contenido a un archivo
+// int overwrite(char* path)
+// {
+//     return 0;
+// }

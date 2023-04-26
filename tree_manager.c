@@ -3,40 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-//Busqueda del inodo "target" en cuestion en el directorio "directory"
-//Si se encuentra el inodo, se devuelve el inodo
-//Si no se encuentra, se devuelve NULL
-
-struct inode_fs *inode_search(char *target, struct inode_fs directory){
-    int i = 0;
-    struct inode_fs *res = malloc(sizeof(struct inode_fs));
-    res = NULL;
-    struct directory_entry *entry = malloc(sizeof(struct directory_entry));
-    while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
-        // Recorremos el bloque
-        memcpy(entry, directory.i_directos[i], sizeof(struct directory_entry));
-        for(int j = 1; j < 32 && entry -> inode != NULL; j++){ // j es offset
-            // Para cada elemento comprobar si es target
-            if(strcmp((*entry).name,target) == 0){
-                // Si es target hacemos return del inodo.
-                return (*entry).inode;
-            }
-
-            // En caso de ser directorio entramos en el mismo. Continuamos en caso contrario.
-            else if((*(*entry).inode).i_type == 'd' && strcmp((*entry).name,".") != 0 && strcmp((*entry).name,"..") != 0 ){
-                res = inode_search(target, *(*entry).inode);
-                if (res != NULL) {
-                    return res;
-                }
-            }
-
-            memcpy(entry, directory.i_directos[i]+sizeof(struct directory_entry)*j, sizeof(struct directory_entry));
-        }
-        i++;    
-    }
-    return res;
-}
-
 // Tengo que modificar nuestra estructura de árbol de búsqueda
 void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node) // Versión 1 (Como si solo tuvieramos directos)
 {
@@ -156,26 +122,36 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     return res;
 }
 
-struct inode_fs *search(char *path, char* target,struct inode_fs root)
+struct inode_fs *search(char *path, struct inode_fs root)
 {
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
-    struct inode_fs *current_dir = malloc(sizeof(struct inode_fs));
-    char path_aux[24];
+    struct inode_fs *current_inode = malloc(sizeof(struct inode_fs));
+    char path_aux[24], cmp_path[500] = "";
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     
-    while(token != NULL){
-        // Buscamos el inodo en el directorio actual
-        current_dir = search_in_directory(token, *current_dir);
+    current_inode = search_in_directory(token, root);
 
-        if(current_dir == NULL || current_dir->i_type != 'd') {
+    while(token != NULL && current_inode->i_type == 'd'){
+        strcat(cmp_path, "/");
+        // Buscamos el inodo en el directorio actual
+        if(current_inode == NULL) {
             printf("No se ha encontrado el directorio\n");
             return NULL;
         }
+        
+        // Concatenamos el path
+        strcat(cmp_path, current_inode->i_name);
         token = strtok(NULL, "/");
+        if (token != NULL) current_inode = search_in_directory(token, *current_inode);
     }
 
-    return search_directory(target, current_dir);
+    if(strcmp(cmp_path,path) != 0){
+        printf("No existe el fichero\n");
+        return NULL;
+    }
+
+    return current_inode;
 }
 
 struct inode_fs *search_directory(char *path, struct inode_fs *root){
@@ -199,3 +175,4 @@ struct inode_fs *search_directory(char *path, struct inode_fs *root){
     }
     return current_dir;
 }
+

@@ -32,4 +32,6 @@ int main(){
 
     rm("diego_cipote.txt", "/home/usuario/Desktop", root, inode_bitmap);
     print_directory(*root);
+
+    struct inode_fs *res_dr = search("/home/usuario/Desktop", *root);
 }

@@ -75,21 +75,22 @@ struct inode_bitmap_fs{
 int free_inode(struct inode_bitmap_fs *);
 void remove_inode_bitmap(struct inode_bitmap_fs *, int);
 
-//create_inode.c
+//inode.c
 struct inode_fs *create_inode(char , char *,  struct inode_bitmap_fs *);
 struct inode_fs *create_root(struct inode_bitmap_fs *);
 void remove_inode(struct inode_fs *, struct inode_bitmap_fs *);
+void remove_entry(char *, struct inode_fs *);
 
 //file_manager.c
 void touch(char *, char , char *,  struct inode_fs *, struct inode_bitmap_fs *);
 void print_directory(struct inode_fs );
 void rm(char *, char *, struct inode_fs *, struct inode_bitmap_fs *);
+void rmdir(char *, struct inode_fs *, struct inode_bitmap_fs *);
 
 //tree_manager.c
-struct inode_fs *inode_search(char *, struct inode_fs);
 void insert(char *, struct inode_fs *, struct inode_fs *);
 struct inode_fs *search_in_directory(char *, struct inode_fs );
-struct inode_fs *search(char *, char* ,struct inode_fs );
+struct inode_fs *search(char * ,struct inode_fs );
 struct inode_fs *search_directory(char *, struct inode_fs *);
 
 #endif
