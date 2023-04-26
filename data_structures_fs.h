@@ -88,8 +88,8 @@ void rm(char *, char *, struct inode_fs *, struct inode_bitmap_fs *);
 //tree_manager.c
 struct inode_fs *inode_search(char *, struct inode_fs);
 void insert(char *, struct inode_fs *, struct inode_fs *);
-struct inode_fs *search_in_directory(char *, struct inode_fs);
-struct inode_fs *search(char *, char* ,struct inode_fs);
-struct inode_fs *search_directory(char *, struct inode_fs);
+struct inode_fs *search_in_directory(char *, struct inode_fs );
+struct inode_fs *search(char *, char* ,struct inode_fs );
+struct inode_fs *search_directory(char *, struct inode_fs *);
 
 #endif

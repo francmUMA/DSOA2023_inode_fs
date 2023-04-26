@@ -6,7 +6,7 @@
 // Create a new file with the given name in the given directory
 void touch(char *name, char type, char *path_directory,  struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
     // Search for the directory
-    struct inode_fs *dir = search_directory(path_directory, *root);
+    struct inode_fs *dir = search_directory(path_directory, root);
     if(dir == NULL){
         printf("Directory not found\n");
         return;
@@ -58,7 +58,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
 
 void rm(char *name, char *path_directory, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
     // Search for the directory
-    struct inode_fs *dir = search_directory(path_directory, *root);
+    struct inode_fs *dir = search_directory(path_directory, root);
     if(dir == NULL){
         printf("Directory not found\n");
         return;
