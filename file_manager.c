@@ -106,9 +106,37 @@ void rmdir(char* path, struct inode_fs *root, struct inode_bitmap_fs *inode_bitm
     }
 }
 
-
 // Sobreescribir contenido a un archivo
-// int overwrite(char* path)
-// {
-//     return 0;
-// }
+int overwrite(char* path, char *contenido, struct inode_fs root)
+{
+    struct inode_fs *file = search(path,root);
+
+    if(file == NULL)
+    {
+        printf("No se ha encontrado el archivo\n");
+        return -1;
+    }
+
+    // Comprobamos que sea archivo con i_type = '-'
+    if((*file).i_type != '-')
+    {
+        printf("No se puede sobreescribir un directorio\n");
+        return -1;
+    }
+
+    // Comprobamos que el contenido no sea mayor que 
+    if(strlen(contenido) > (sizeof(char) * 1024 * 10))
+    {
+        printf("El contenido es mayor que el tamaño del archivo\n");
+        return -1;
+    }
+
+    // Añadir caracter al inodo
+    int i;
+    for(i = 0; i < strlen(contenido); i++)
+    {
+        add_char_to_inode(file, contenido[i]);
+    }
+
+    return 0;
+}

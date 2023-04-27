@@ -86,6 +86,7 @@ void touch(char *, char , char *,  struct inode_fs *, struct inode_bitmap_fs *);
 void print_directory(struct inode_fs );
 void rm(char *, char *, struct inode_fs *, struct inode_bitmap_fs *);
 void rmdir(char *, struct inode_fs *, struct inode_bitmap_fs *);
+int overwrite(char* path, char *contenido, struct inode_fs root);
 
 //tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);
