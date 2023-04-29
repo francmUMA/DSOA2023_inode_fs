@@ -106,8 +106,8 @@ void rmdir(char* path, struct inode_fs *root, struct inode_bitmap_fs *inode_bitm
     }
 }
 
-// Sobreescribir contenido a un archivo
-int overwrite(char* path, char *contenido, struct inode_fs root)
+// Añade contenido a un archivo
+int append(char* path, char *contenido, struct inode_fs root)
 {
     struct inode_fs *file = search(path,root);
 
@@ -137,6 +137,53 @@ int overwrite(char* path, char *contenido, struct inode_fs root)
     {
         add_char_to_inode(file, contenido[i]);
     }
+    file -> i_tam += strlen(contenido);
 
     return 0;
+}
+
+// Añade contenido a un archivo
+int overwrite(char* path, char *contenido, struct inode_fs root)
+{
+    // Limpia los bloques del inodo
+    struct inode_fs *file = search(path,root);
+    if (file == NULL){
+        printf("File not found\n");
+        return -1;
+    }
+
+    clean_inode(file);
+
+    return append(path, contenido, root);
+}
+
+// Lee el contenido de un archivo
+char *read_file(char *path, struct inode_fs root){
+    struct inode_fs *file = search(path,root);
+    if (file == NULL){
+        printf("File not found\n");
+        return;
+    }
+
+    // Comprobamos que sea archivo con i_type = '-'
+    if((*file).i_type != '-')
+    {
+        printf("No se puede leer un directorio\n");
+        return;
+    }
+
+    // Mostramos el contenido del inodo
+    char *buffer = malloc(sizeof(char) * 1024);
+    char *res = malloc(file -> i_tam);
+
+    int counter = 0;
+    for(int i = 0; i < N_DIRECTOS && counter < file -> i_tam; i++){
+        memcpy(buffer, file -> i_directos[i], sizeof(char) * 1024);
+        for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
+            res[counter] = buffer[j];
+            counter++;
+        }
+        free(buffer);
+    }
+    return res;
 }

@@ -31,11 +31,7 @@ void remove_inode(struct inode_fs *inode, struct inode_bitmap_fs *inode_bitmap){
     remove_inode_bitmap(inode_bitmap, inode->i_num);
     
     // Limpiar todos los bloques del inodo
-    // Recorremos cada bloque y pones cada entrada a 0
-    for(int i = 0; i < N_DIRECTOS && inode -> i_directos[i] != NULL; i++){
-        memset(inode -> i_directos[i], 0, 1024);
-        inode -> i_directos[i] = NULL;
-    }
+    clean_inode(inode);
 
     //Liberamos el inodo
     free(inode);
@@ -54,6 +50,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
             memcpy(file->i_directos[i], buffer, 1024);
             end = 1;
         }
+        memset(buffer, 0, 1024);
         i++;
     } 
 
@@ -66,9 +63,16 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
         // Liberamos el espacio reservado para el buffer
         free(buffer);
         buffer = NULL;
-    }else if(i == N_DIRECTOS)
+    }else if(!end && i == N_DIRECTOS)
     {
         printf("XUPALA NO HAY ESPACIO\n");
     }
     
+}
+
+void clean_inode(struct inode_fs *file) {
+    for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
+        memset(file -> i_directos[i], 0, 1024);
+        file -> i_directos[i] = NULL;
+    }
 }

@@ -80,13 +80,16 @@ struct inode_fs *create_inode(char , char *,  struct inode_bitmap_fs *);
 struct inode_fs *create_root(struct inode_bitmap_fs *);
 void remove_inode(struct inode_fs *, struct inode_bitmap_fs *);
 void remove_entry(char *, struct inode_fs *);
+void clean_inode(struct inode_fs *);
 
 //file_manager.c
 void touch(char *, char , char *,  struct inode_fs *, struct inode_bitmap_fs *);
 void print_directory(struct inode_fs );
 void rm(char *, char *, struct inode_fs *, struct inode_bitmap_fs *);
 void rmdir(char *, struct inode_fs *, struct inode_bitmap_fs *);
-int overwrite(char* path, char *contenido, struct inode_fs root);
+int append(char* , char *, struct inode_fs );
+int overwrite(char* , char *, struct inode_fs);
+char *read_file(char *, struct inode_fs);
 
 //tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);

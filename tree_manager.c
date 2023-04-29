@@ -131,24 +131,30 @@ struct inode_fs *search(char *path, struct inode_fs root)
     char *token = strtok(path_aux, "/");
     
     current_inode = search_in_directory(token, root);
+    if (current_inode != NULL) {
+        while(token != NULL && current_inode->i_type == 'd'){
+            strcat(cmp_path, "/");
+            // Buscamos el inodo en el directorio actual
+            if(current_inode == NULL) {
+                printf("No se ha encontrado el directorio\n");
+                return NULL;
+            }
+            
+            // Concatenamos el path
+            strcat(cmp_path, current_inode->i_name);
+            token = strtok(NULL, "/");
+            if (token != NULL) current_inode = search_in_directory(token, *current_inode);
+        }   
+        
+        if (current_inode ->i_type == '-') {
+            strcat(cmp_path, "/");
+            strcat(cmp_path, current_inode->i_name);
+        }
 
-    while(token != NULL && current_inode->i_type == 'd'){
-        strcat(cmp_path, "/");
-        // Buscamos el inodo en el directorio actual
-        if(current_inode == NULL) {
-            printf("No se ha encontrado el directorio\n");
+        if(strcmp(cmp_path,path) != 0){
+            printf("No existe el fichero\n");
             return NULL;
         }
-        
-        // Concatenamos el path
-        strcat(cmp_path, current_inode->i_name);
-        token = strtok(NULL, "/");
-        if (token != NULL) current_inode = search_in_directory(token, *current_inode);
-    }
-
-    if(strcmp(cmp_path,path) != 0){
-        printf("No existe el fichero\n");
-        return NULL;
     }
 
     return current_inode;
