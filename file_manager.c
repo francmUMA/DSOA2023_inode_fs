@@ -54,23 +54,6 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
         printf("\n");
         i++;    
     }
-
-    // Miramos los indirectos simples
-    traer_directos();
-    traer_indirectos_simples();
-    traer_indirectos_dobles();
-    traer_indirectos_triples();
-    // i = 0;
-    // long *bloc_direct;
-    // while(i < N_SIMPLES && directory.i_simple_ind[i] != NULL){
-    //     // Recorremos el bloque
-    //     bloc_direct = (long *) directory.i_simple_ind[i];
-    //     for(int j = 0; j < 1024 / (sizeof(*long)); j++){
-    //         // Print the entry
- 
-    //     }
-    // }
-
 }
 
 
@@ -143,11 +126,11 @@ int append(char* path, char *contenido, struct inode_fs root)
     }
 
     // Comprobamos que el contenido no sea mayor que 
-    if(strlen(contenido) > (sizeof(char) * 1024 * 10))
-    {
-        printf("El contenido es mayor que el tamaño del archivo\n");
-        return -1;
-    }
+    // if(strlen(contenido) > (sizeof(char) * 1024 * 10))
+    // {
+    //     printf("El contenido es mayor que el tamaño del archivo\n");
+    //     return -1;
+    // }
 
     // Añadir caracter al inodo
     int i;

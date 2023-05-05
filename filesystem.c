@@ -33,13 +33,16 @@ int main(){
     // Añadimos contenido al archivo test.txt
     append("/home/usuario/Desktop/test.txt", "Esto es una prueba", *root);
     append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba", *root);
-    // char test[10241];
-    // for (int i = 0; i < 10241; i++){
-    //     test[i] = 'a';
-    // }
-    //overwrite("/home/usuario/Desktop/test.txt", test,*root);
+    char test[10240];
+    for (int i = 0; i < 10240; i++){
+        test[i] = 'a';
+    }
+    overwrite("/home/usuario/Desktop/test.txt", test,*root);
+    append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba", *root);
     
     char *content = read_file("/home/usuario/Desktop/test.txt", *root);
     printf("%s\n", content);
+
+
     
 }
