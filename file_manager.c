@@ -46,7 +46,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
             // Print the entry
             printf("%s ", entry->name);
             if((*(*entry).inode).i_type == 'd' && strcmp((*entry).name, ".") != 0 && strcmp((*entry).name, "..") != 0){
-                printf("\n  -> "); 
+                printf("\n -> "); 
                 print_directory(*(*entry).inode);
             }
             memcpy(entry, directory.i_directos[i]+sizeof(struct directory_entry)*j, sizeof(struct directory_entry));
@@ -54,7 +54,25 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
         printf("\n");
         i++;    
     }
+
+    // Miramos los indirectos simples
+    traer_directos();
+    traer_indirectos_simples();
+    traer_indirectos_dobles();
+    traer_indirectos_triples();
+    // i = 0;
+    // long *bloc_direct;
+    // while(i < N_SIMPLES && directory.i_simple_ind[i] != NULL){
+    //     // Recorremos el bloque
+    //     bloc_direct = (long *) directory.i_simple_ind[i];
+    //     for(int j = 0; j < 1024 / (sizeof(*long)); j++){
+    //         // Print the entry
+ 
+    //     }
+    // }
+
 }
+
 
 void rm(char *name, char *path_directory, struct inode_fs *root, struct inode_bitmap_fs *inode_bitmap){
     // Search for the directory
@@ -185,5 +203,7 @@ char *read_file(char *path, struct inode_fs root){
         }
         free(buffer);
     }
+
+    // Versión para punteros indirectos simples
     return res;
 }

@@ -33,6 +33,12 @@ struct directory_entry{
 //Lista de inodos libres
 //typedef struct inode *Free_inodes_list;
 
+// Bloque directo
+typedef struct block_list{
+    long block;
+    block_list *next;
+} block_list;
+
 //Inodo
 struct inode_fs{
     int i_num;
@@ -41,7 +47,7 @@ struct inode_fs{
     int i_tam;
     // int i_permission;
     long i_directos[N_DIRECTOS]; 
-    long i_simple_ind[N_SIMPLES];
+    long i_simple_ind[N_SIMPLES]; // Cada puntero apunta a un bloque con 128 punteros a bloques de datos
     // long i_double_ind[N_DOBLES];
     // long i_triple_ind[N_TRIPLES];
     // char i_relleno [20]; 

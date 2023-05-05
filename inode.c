@@ -71,8 +71,59 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
 }
 
 void clean_inode(struct inode_fs *file) {
+    // Limpiamos primero los directos
     for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
         memset(file -> i_directos[i], 0, 1024);
         file -> i_directos[i] = NULL;
     }
 }
+
+// Función que trae los bloques de los punteros indirectos
+block_list get_blocks_indirect(long i_indirecto)
+{
+    block_list *blocks = malloc(sizeof(struct block_list));
+    block_list *aux = blocks;
+    int i = 0;
+    long current = malloc(sizeof(long));
+    long next = malloc(sizeof(long));
+
+    int offset = i * sizeof(long);
+
+    memcpy(current, i_indirecto + offset, sizeof(long));
+    if(current == NULL){
+        return NULL;
+    }
+    i++;
+    memcpy(next, i_indirecto + offset, sizeof(long));
+    
+    while(next != NULL){
+        aux->block = current;
+        current = next;
+        aux = aux->next;
+        memcpy(next, i_indirecto + offset, sizeof(long));
+    }
+
+    aux->block = current;
+    aux->next = NULL;
+    blocks = aux;
+    
+    return blocks;
+}
+
+// Función que trae los bloques de los punteros indirectos dobles
+block_list get_blocks_indirect_double(long i_double_indirecto)
+{
+
+}
+
+// Función que trae los bloques de los punteros indirectos triples
+block_list get_blocks_indirect_triple(long i_triple_indirecto)
+{
+
+}
+
+
+
+
+
+
