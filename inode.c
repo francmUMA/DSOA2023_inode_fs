@@ -68,7 +68,11 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
         if (file->i_simple_ind[0] == NULL){
 
             //Crear bloque de punteros directos
-            file->i_simple_ind[0] = malloc(sizeof(char)*1024);
+            long *ptr = malloc(sizeof(char)*1024);
+            memset(ptr, 0, 1024); // Esta línea no estaba antes
+            printf("Dirección simple_ind: %p\n", ptr);
+            printf("Contenido simple_ind: %s\n", *ptr);
+            file->i_simple_ind[0] = ptr;
         }
 
         // Obtener todos los bloques directos del puntero indirecto
@@ -117,9 +121,10 @@ void clean_inode(struct inode_fs *file) {
 }
 
 // Función que trae los bloques de los punteros indirectos
-block_list get_blocks_indirect(long i_indirecto)
+block_list get_blocks_indirect(long *i_indirecto)
 {
     block_list blocks = malloc(sizeof(struct block_list));
+    blocks = NULL;
     
     int i = 0;
     long *current = malloc(sizeof(long));
@@ -127,10 +132,10 @@ block_list get_blocks_indirect(long i_indirecto)
 
     int offset = sizeof(long);
 
-    memcpy(current, &i_indirecto, sizeof(long));
-    printf("current: %ld\n", *current);
+    memcpy(current, i_indirecto, sizeof(long));
+    printf("current: %s\n", *current);
     if(*current == NULL){
-        return blocks;
+        return blocks; // Antes era blocks
     }
     i++;
     memcpy(next, i_indirecto + offset*i, sizeof(long));
@@ -153,18 +158,18 @@ block_list get_blocks_indirect(long i_indirecto)
 }
 
 // Función que añade un bloque al puntero indirecto
-void add_block_indirect(long indirect_pointer, long direct_pointer){
+void add_block_indirect(long *indirect_pointer, long direct_pointer){
     // Localizar el primer hueco en el puntero indirecto
     int i = 0;
     int offset = sizeof(long);
     long *pointer = malloc(sizeof(long));
-    memcpy(pointer, &indirect_pointer + offset*i, sizeof(long));
+    memcpy(pointer, indirect_pointer + offset*i, sizeof(long));
     while(*pointer != NULL){
         i++;
-        memcpy(pointer, &indirect_pointer + offset, sizeof(long));
+        memcpy(pointer, indirect_pointer + offset, sizeof(long));
     }
     //Añadir el bloque al puntero indirecto
-    memcpy(&indirect_pointer + offset, &direct_pointer, sizeof(long));
+    memcpy(indirect_pointer + offset, &direct_pointer, sizeof(long));
 }
 
 // Función que trae los bloques de los punteros indirectos dobles
