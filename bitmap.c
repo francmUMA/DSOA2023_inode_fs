@@ -43,23 +43,29 @@ void remove_inode_bitmap(struct inode_bitmap_fs *inode_bitmap, int inode){
     (*inode_bitmap).bitmap[byte] &= ~(1 << bit);
 }
 
-//Repetir el mismo proceso para el bitmap de bloques
-// int free_block(struct block_bitmap *block_bitmap){
-//     int byte = 0;
+long free_block(){
+    int byte = 0; 
 
-//     //Encontramos el primer byte que no es 0xFF
-//     while(byte < NUM_BLOCKS/8 && ((*block_bitmap).bitmap[byte]) == 0xFF){
-//         byte++;
-//     }
+    //Encontramos el primer byte que no es 0xFF
+    while(byte < NUM_BLOCKS/8 && ((*block_bitmap).bitmap[byte]) == 0xFF){
+        byte++;
+    }
 
-//     //Ahora buscamos el primer bit que es 0
-//     int bit = 7;
+    //Ahora buscamos el primer bit que es 0
+    int bit = 7;
 
-//     //Creamos un auxiliar por eficiencia
-//     unsigned char aux = (*block_bitmap).bitmap[byte];
-//     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
-//         bit--;
-//     }
-//     (*block_bitmap).bitmap[byte] |= (1 << bit);
-//     return (byte * 8) + (8 - bit);
-// }
+    //Creamos un auxiliar por eficiencia
+    unsigned char aux = (*block_bitmap).bitmap[byte];
+    while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
+        bit--;
+    }
+    (*block_bitmap).bitmap[byte] |= (1 << bit);
+    return (long) (byte * 8) + (8 - bit);
+}
+
+//Limpiar un inodo del bitmap de inodos
+void remove_block_bitmap(struct block_bitmap_fs *block_bitmap, long block){
+    int byte = block / 8;
+    int bit = 7 - (block % 8);
+    (*block_bitmap).bitmap[byte] &= ~(1 << bit);
+}

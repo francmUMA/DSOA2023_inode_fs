@@ -184,8 +184,19 @@ char *read_file(char *path, struct inode_fs root){
             res[counter] = buffer[j];
             counter++;
         }
-        free(buffer);
+        memset(buffer, 0, sizeof(char) * 1024);
     }
+    block_list direct_blocks_indirect = get_blocks_indirect(file -> i_simple_ind[0]);
+    while(direct_blocks_indirect != NULL){
+        memcpy(buffer, direct_blocks_indirect -> block, sizeof(char) * 1024);
+        for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
+            res[counter] = buffer[j];
+            counter++;
+        }
+        memset(buffer, 0, sizeof(char) * 1024);
+        direct_blocks_indirect = direct_blocks_indirect -> next;
+    }
+    free(buffer);
 
     // Versión para punteros indirectos simples
     return res;

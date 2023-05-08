@@ -49,12 +49,13 @@ struct inode_fs{
     int i_tam;
     // int i_permission;
     long i_directos[N_DIRECTOS]; 
-    long *i_simple_ind[N_SIMPLES]; // Cada puntero apunta a un bloque con 128 punteros a bloques de datos
+    long *i_simple_ind[N_SIMPLES]; 
     // long i_double_ind[N_DOBLES];
     // long i_triple_ind[N_TRIPLES];
     // char i_relleno [20]; 
 };
 
+static long *blocks[NUM_BLOCKS];
 
 //SUPERBLOQUE
 // struct superblock {
@@ -66,14 +67,17 @@ struct inode_fs{
 // };
 
 //BITMAP DE BLOQUES
-// struct block_bitmap_fs {
-//     unsigned char bitmap[NUM_BLOCKS / 8];       
-// };
+struct block_bitmap_fs {
+    unsigned char bitmap[NUM_BLOCKS / 8];       
+};
   
 //BITMAP DE INODOS
 struct inode_bitmap_fs{
     unsigned char bitmap[NUM_INODES / 8]; 
 };
+
+struct inode_bitmap_fs *inode_bitmap;
+struct block_bitmap_fs *block_bitmap;
 
 /******************************************************************************************
 *                                   FUNCTIONS                                             *  
@@ -82,6 +86,8 @@ struct inode_bitmap_fs{
 //bitmap.c
 int free_inode(struct inode_bitmap_fs *);
 void remove_inode_bitmap(struct inode_bitmap_fs *, int);
+long free_block();
+void remove_block_bitmap(struct block_bitmap_fs *, long );
 
 //inode.c
 struct inode_fs *create_inode(char , char *,  struct inode_bitmap_fs *);
@@ -91,6 +97,7 @@ void remove_entry(char *, struct inode_fs *);
 void clean_inode(struct inode_fs *);
 block_list get_blocks_indirect(long *);
 void add_block_indirect(long *, long );
+long create_block();
 
 //file_manager.c
 void touch(char *, char , char *,  struct inode_fs *, struct inode_bitmap_fs *);

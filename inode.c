@@ -118,6 +118,7 @@ void clean_inode(struct inode_fs *file) {
         memset(file -> i_directos[i], 0, 1024);
         file -> i_directos[i] = NULL;
     }
+    file -> i_tam = 0;
 }
 
 // Función que trae los bloques de los punteros indirectos
@@ -182,6 +183,14 @@ block_list get_blocks_indirect_double(long i_double_indirecto)
 block_list get_blocks_indirect_triple(long i_triple_indirecto)
 {
     ;
+}
+
+long create_block(){
+    long *block = malloc(1024);
+    memset(block, 0, 1024);
+    long index = free_block();
+    blocks[index] = block;
+    return index;
 }
 
 
