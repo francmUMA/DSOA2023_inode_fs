@@ -41,7 +41,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
     struct directory_entry *entry = malloc(sizeof(struct directory_entry));
     while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
         // Recorremos el bloque
-        memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
+        memcpy(entry, blocks[directory.i_directos[i]]+offset, sizeof(struct directory_entry));
         for(int j = 1; j < 32 && entry != NULL; j++){ // j es offset
             // Print the entry
             offset = sizeof(struct directory_entry)*j;
@@ -50,7 +50,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
                 printf("\n -> "); 
                 print_directory(*(*entry).inode);
             }
-            memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
+            memcpy(entry, blocks[directory.i_directos[i]]+offset, sizeof(struct directory_entry));
         }
         printf("\n");
         i++;    
@@ -102,16 +102,17 @@ void rmdir(char* path)
     if(i == N_DIRECTOS){
         // Esta vacío
         // Eliminamos la entrada de directorio
-        remove_entry(path, root); // TODO: Cambiar root por el directorio padre
+        struct inode_fs *parent = search_in_directory("..", *current_dir);
+        remove_entry(path, parent); 
         // Liberamos el inodo
         remove_inode(current_dir);
     }
 }
 
 // Añade contenido a un archivo
-int append(char* path, char *contenido, struct inode_fs root)
+int append(char* path, char *contenido)
 {
-    struct inode_fs *file = search(path,root);
+    struct inode_fs *file = search(path);
 
     if(file == NULL)
     {
@@ -145,10 +146,10 @@ int append(char* path, char *contenido, struct inode_fs root)
 }
 
 // Añade contenido a un archivo
-int overwrite(char* path, char *contenido, struct inode_fs root)
+int overwrite(char* path, char *contenido)
 {
     // Limpia los bloques del inodo
-    struct inode_fs *file = search(path,root);
+    struct inode_fs *file = search(path);
     if (file == NULL){
         printf("File not found\n");
         return -1;
@@ -156,12 +157,12 @@ int overwrite(char* path, char *contenido, struct inode_fs root)
 
     clean_inode(file);
 
-    return append(path, contenido, root);
+    return append(path, contenido);
 }
 
 // Lee el contenido de un archivo
-char *read_file(char *path, struct inode_fs root){
-    struct inode_fs *file = search(path,root);
+char *read_file(char *path){
+    struct inode_fs *file = search(path);
     if (file == NULL){
         printf("File not found\n");
         return;
@@ -180,7 +181,7 @@ char *read_file(char *path, struct inode_fs root){
 
     int counter = 0;
     for(int i = 0; i < N_DIRECTOS && counter < file -> i_tam; i++){
-        memcpy(buffer, file -> i_directos[i], sizeof(char) * 1024);
+        memcpy(buffer, blocks[file -> i_directos[i]], sizeof(char) * 1024);
         for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
             res[counter] = buffer[j];
             counter++;
@@ -189,7 +190,7 @@ char *read_file(char *path, struct inode_fs root){
     }
     block_list direct_blocks_indirect = get_blocks_indirect(file -> i_simple_ind[0]);
     while(direct_blocks_indirect != NULL){
-        memcpy(buffer, direct_blocks_indirect -> block, sizeof(char) * 1024);
+        memcpy(buffer, blocks[direct_blocks_indirect -> block_index], sizeof(char) * 1024);
         for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
             res[counter] = buffer[j];
             counter++;
@@ -199,6 +200,5 @@ char *read_file(char *path, struct inode_fs root){
     }
     free(buffer);
 
-    // Versión para punteros indirectos simples
     return res;
 }

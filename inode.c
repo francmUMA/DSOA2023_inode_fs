@@ -117,35 +117,8 @@ void clean_inode(struct inode_fs *file) {
 // Función que trae los bloques de los punteros indirectos
 block_list get_blocks_indirect(long i_indirecto)
 {
-    block_list blocks = malloc(sizeof(struct block_list));
-    blocks = NULL;
-    
-    int i = 0, offset = 0;
-    long current,next;
-
-    memcpy(&current, blocks[i_indirecto], sizeof(long));
-    if(current == NULL){
-        return blocks; // Antes era blocks
-    }
-    i++;
-    offset = i * sizeof(long);
-    memcpy(&next, blocks[i_indirecto] + offset, sizeof(long));
-    blocks -> block_index = current;
-    blocks -> next = NULL;
-    block_list aux = blocks;
-    while(next != NULL){
-        aux->block_index = current;
-        aux->next = next;
-        current = next;
-        aux = aux->next;
-        i++;
-        memcpy(&next, blocks[i_indirecto] + offset, sizeof(long));
-    }
-
-    aux->block = current;
-    aux->next = NULL;
-    
-    return blocks;
+    //TODO
+    ;
 }
 
 // Función que añade un bloque al puntero indirecto
@@ -155,14 +128,14 @@ void add_block_indirect(long indirect_pointer, long direct_pointer){
     int offset = 0; // Tamaño de un puntero
     long block_index;
     // Nos traemos el bloque
-    memcpy(block_index, block[indirect_pointer] + offset, sizeof(long));
+    memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));
     while(block_index != NULL){
         i++;
         offset = sizeof(long)*i;
-        memcpy(block_index, block[indirect_pointer] + offset, sizeof(long));
+        memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));
     }
     // Añadimos el bloque al puntero indirecto
-    memcpy(block[indirect_pointer] + offset, &direct_pointer, sizeof(long));
+    memcpy(blocks[indirect_pointer] + offset, &direct_pointer, sizeof(long));
 }
 
 // Función que trae los bloques de los punteros indirectos dobles

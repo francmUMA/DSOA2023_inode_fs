@@ -103,11 +103,11 @@ long create_block();
 //file_manager.c
 void touch(char *, char , char *);
 void print_directory(struct inode_fs );
-void rm(char *, char *, struct inode_fs *);
-void rmdir(char *, struct inode_fs *);
-int append(char* , char *, struct inode_fs );
-int overwrite(char* , char *, struct inode_fs);
-char *read_file(char *, struct inode_fs);
+void rm(char *, char *);
+void rmdir(char *);
+int append(char* , char *);
+int overwrite(char* , char *);
+char *read_file(char *);
 
 //tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);

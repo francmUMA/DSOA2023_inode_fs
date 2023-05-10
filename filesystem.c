@@ -10,38 +10,43 @@
 int main()
 {
     // Creamos el bitmap de inodos
-    struct inode_bitmap_fs *inode_bitmap = malloc(sizeof(struct inode_bitmap_fs));
+    block_bitmap = malloc(sizeof(struct block_bitmap_fs));
+    inode_bitmap = malloc(sizeof(struct inode_bitmap_fs));
 
     // Creamos el inodo root
-    struct inode_fs *root = create_root(inode_bitmap);
+    root = create_root();
 
     // Creamos el directorio /home
-    touch("home", 'd', ".", root, inode_bitmap);
+    touch("home", 'd', ".");
 
     // Creamos el directorio /home/usuario
-    touch("usuario", 'd', "/home", root, inode_bitmap);
+    touch("usuario", 'd', "/home");
 
     // Creamos el directorio /home/usuario/Desktop
-    touch("Desktop", 'd', "/home/usuario", root, inode_bitmap);
+    touch("Desktop", 'd', "/home/usuario");
 
     // Creamos el directorio /dev
-    touch("dev", 'd', ".", root, inode_bitmap);
+    touch("dev", 'd', ".");
 
     // Creamos el archivo diego_cipote.txt
-    touch("test.txt", '-', "/home/usuario/Desktop", root, inode_bitmap);
+    touch("test.txt", '-', "/home/usuario/Desktop");
     // print_directory(*root);
 
     // Añadimos contenido al archivo test.txt
-    append("/home/usuario/Desktop/test.txt", "Esto es una prueba", *root);
-    append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba", *root);
-    char test[10240];
-    for (int i = 0; i < 10240; i++)
+    append("/home/usuario/Desktop/test.txt", "Esto es una prueba");
+    append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba");
+
+    char *content = read_file("/home/usuario/Desktop/test.txt");
+    printf("%s\n", content);
+
+    char test[12000];
+    for (int i = 0; i < 12000; i++)
     {
         test[i] = 'a';
     }
-    overwrite("/home/usuario/Desktop/test.txt", test, *root);
-    append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba", *root);
+    overwrite("/home/usuario/Desktop/test.txt", test);
+    append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba");
 
-    char *content = read_file("/home/usuario/Desktop/test.txt", *root);
-    printf("%s\n", content);
+    char *content1 = read_file("/home/usuario/Desktop/test.txt");
+    printf("%s\n", content1);
 }
