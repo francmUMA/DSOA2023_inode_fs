@@ -11,21 +11,21 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
     while(i < N_DIRECTOS && directory_dst->i_directos[i] != NULL && !end){
         // Vamos a buscar el primer hueco libre en el bloque
         // Recorremos el bloque
-        memcpy(entry, (*directory_dst).i_directos[i], sizeof(struct directory_entry));
-        for(int j = 1; j < 32 && (entry -> inode) != NULL; j++){
+        memcpy(entry, blocks[directory_dst->i_directos[i]], sizeof(struct directory_entry));
+        for(int j = 1; j < 32 && entry != NULL; j++){
             //Traemos la entrada de directorio
             offset = sizeof(struct directory_entry)*j;
-            memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(struct directory_entry)); 
+            memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry)); 
         }
         // Nos aseguramos de que nuestra entrada es null
-        if (entry->inode == NULL)
+        if (entry == NULL)
         {
             // Guardamos nuestra entrada de bloque
             strcpy(entry->name, name);
 
             entry->inode = n_node;
             // Copiado el bloque
-            memcpy((*directory_dst).i_directos[i]+offset, entry,sizeof(struct directory_entry));
+            memcpy(blocks[directory_dst->i_directos[i]]+offset, entry,sizeof(struct directory_entry));
             end = 1;
         }
         i++;
@@ -34,7 +34,7 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
     // Si no hemos encontrado un hueco libre, creamos un nuevo bloque si es posible
     if (!end && i < N_DIRECTOS){
         // Creamos un nuevo bloque
-        (*directory_dst).i_directos[i] = malloc(sizeof(struct directory_entry)*32);
+        directory_dst -> i_directos[i] = create_block();
 
         // Modificamos la entrada de directorio
         strcpy(entry->name, name);
@@ -47,7 +47,7 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
         }
 
         // Copiado el bloque    
-        memcpy((*directory_dst).i_directos[i], entry, sizeof(struct directory_entry));
+        memcpy(blocks[directory_dst->i_directos[i]], entry, sizeof(struct directory_entry));
 
         entry = NULL;
         free(entry);
@@ -65,21 +65,20 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
     while(i < N_DIRECTOS && directory_dst->i_directos[i] != NULL && !end){
 
         // Recorremos el bloque
-        memcpy(entry, (*directory_dst).i_directos[i], sizeof(struct directory_entry));
-        for(int j = 1; j < 32 && (entry -> inode) != NULL && !end; j++){
+        memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
+        for(int j = 1; j < 32 && entry != NULL && !end; j++){
 
             // Si es la entrada que buscamos, la eliminamos
             if (strcmp(entry->name, name) == 0){
 
                 //Se elimina la entrada de directorio
-                memset((*directory_dst).i_directos[i]+offset, 0, sizeof(struct directory_entry));
+                memset(blocks[directory_dst->i_directos[i]]+offset, 0, sizeof(struct directory_entry));
                 end = 1;
             } else {
                 //Traemos la entrada de directorio
                 offset = sizeof(struct directory_entry)*j;
-                memcpy(entry, (*directory_dst).i_directos[i]+offset, sizeof(struct directory_entry));
+                memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
             }
-
             
         }
         i++;
@@ -105,8 +104,8 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     for (int i = 0; i < N_DIRECTOS && directory.i_directos[i] != NULL & !end; i++){
 
         // Recorremos el bloque
-        memcpy(entry, directory.i_directos[i], sizeof(struct directory_entry));
-        for (int j = 1; j < 32 && (entry -> inode != NULL) && !end; j++){
+        memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
+        for (int j = 1; j < 32 && entry != NULL && !end; j++){
             if (strcmp(entry->name, target) == 0){
                 // Si es el inodo que buscamos, lo devolvemos
                 res = entry->inode;
@@ -114,7 +113,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
             } else {
                 //Traemos la entrada de directorio
                 offset = sizeof(struct directory_entry)*j;
-                memcpy(entry, directory.i_directos[i]+offset, sizeof(struct directory_entry));
+                memcpy(entry, blocks[directory_dst->i_directos[i]]+offset, sizeof(struct directory_entry));
             }
         }
     }
@@ -122,7 +121,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     return res;
 }
 
-struct inode_fs *search(char *path, struct inode_fs root)
+struct inode_fs *search(char *path)
 {
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
     struct inode_fs *current_inode = malloc(sizeof(struct inode_fs));
@@ -130,7 +129,7 @@ struct inode_fs *search(char *path, struct inode_fs root)
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     
-    current_inode = search_in_directory(token, root);
+    current_inode = search_in_directory(token, *root);
     if (current_inode != NULL) {
         while(token != NULL && current_inode->i_type == 'd'){
             strcat(cmp_path, "/");
@@ -160,7 +159,7 @@ struct inode_fs *search(char *path, struct inode_fs root)
     return current_inode;
 }
 
-struct inode_fs *search_directory(char *path, struct inode_fs *root){
+struct inode_fs *search_directory(char *path){
     if (strcmp(path, ".") == 0 || strcmp(path, "/") == 0){
         return root;
     }

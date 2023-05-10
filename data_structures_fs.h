@@ -37,7 +37,7 @@ struct directory_entry{
 typedef struct block_list *block_list;
 
 struct block_list{
-    long *block;
+    long block_index;
     block_list *next;
 }; 
 
@@ -49,7 +49,7 @@ struct inode_fs{
     int i_tam;
     // int i_permission;
     long i_directos[N_DIRECTOS]; 
-    long *i_simple_ind[N_SIMPLES]; 
+    long i_simple_ind[N_SIMPLES]; 
     // long i_double_ind[N_DOBLES];
     // long i_triple_ind[N_TRIPLES];
     // char i_relleno [20]; 
@@ -78,32 +78,33 @@ struct inode_bitmap_fs{
 
 struct inode_bitmap_fs *inode_bitmap;
 struct block_bitmap_fs *block_bitmap;
+struct inode_fs *root;
 
 /******************************************************************************************
 *                                   FUNCTIONS                                             *  
 *******************************************************************************************/
 
 //bitmap.c
-int free_inode(struct inode_bitmap_fs *);
-void remove_inode_bitmap(struct inode_bitmap_fs *, int);
+int free_inode();
+void remove_inode_bitmap(int);
 long free_block();
-void remove_block_bitmap(struct block_bitmap_fs *, long );
+void remove_block_bitmap(long );
 
 //inode.c
-struct inode_fs *create_inode(char , char *,  struct inode_bitmap_fs *);
-struct inode_fs *create_root(struct inode_bitmap_fs *);
-void remove_inode(struct inode_fs *, struct inode_bitmap_fs *);
+struct inode_fs *create_inode(char , char *);
+struct inode_fs *create_root();
+void remove_inode(struct inode_fs *);
 void remove_entry(char *, struct inode_fs *);
 void clean_inode(struct inode_fs *);
-block_list get_blocks_indirect(long *);
-void add_block_indirect(long *, long );
+block_list get_blocks_indirect(long );
+void add_block_indirect(long , long );
 long create_block();
 
 //file_manager.c
-void touch(char *, char , char *,  struct inode_fs *, struct inode_bitmap_fs *);
+void touch(char *, char , char *);
 void print_directory(struct inode_fs );
-void rm(char *, char *, struct inode_fs *, struct inode_bitmap_fs *);
-void rmdir(char *, struct inode_fs *, struct inode_bitmap_fs *);
+void rm(char *, char *, struct inode_fs *);
+void rmdir(char *, struct inode_fs *);
 int append(char* , char *, struct inode_fs );
 int overwrite(char* , char *, struct inode_fs);
 char *read_file(char *, struct inode_fs);
@@ -111,7 +112,7 @@ char *read_file(char *, struct inode_fs);
 //tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);
 struct inode_fs *search_in_directory(char *, struct inode_fs );
-struct inode_fs *search(char * ,struct inode_fs );
-struct inode_fs *search_directory(char *, struct inode_fs *);
+struct inode_fs *search(char * );
+struct inode_fs *search_directory(char *);
 
 #endif

@@ -9,26 +9,26 @@
 //Hay que buscar el primer inodo libre con la funcion creada en bitmap.c
 //Se utiliza la estructura struct inode_fs para crear el inodo y se le pasan los campos por parametro
 
-struct inode_fs *create_inode(char type, char *name,  struct inode_bitmap_fs *inode_bitmap){
+struct inode_fs *create_inode(char type, char *name){
     struct inode_fs *new_inode = malloc(sizeof(struct inode_fs));
     new_inode -> i_type = type;
     new_inode -> i_tam = 0;
     strcpy(new_inode -> i_name, name);
-    new_inode -> i_num = free_inode(inode_bitmap);
+    new_inode -> i_num = free_inode();
     return new_inode;
 }
 
 //Creación del inodo root
-struct inode_fs *create_root(struct inode_bitmap_fs *inode_bitmap){
-    struct inode_fs *root = create_inode('d', "/", inode_bitmap);
+struct inode_fs *create_root(){
+    struct inode_fs *root = create_inode('d', "/");
     insert(".", root, root);
     return root;
 }
 
 // Eliminación de un inodo
-void remove_inode(struct inode_fs *inode, struct inode_bitmap_fs *inode_bitmap){
+void remove_inode(struct inode_fs *inode){
     // Eliminamos el inodo del bitmap
-    remove_inode_bitmap(inode_bitmap, inode->i_num);
+    remove_inode_bitmap(inode->i_num);
     
     // Limpiar todos los bloques del inodo
     clean_inode(inode);
@@ -44,21 +44,21 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
     int i = 0, end = 0;
     char *buffer = malloc(sizeof(char)*1024);
     while(i < N_DIRECTOS && file->i_directos[i] != NULL && !end){
-        memcpy(buffer, file->i_directos[i], 1024);
+        memcpy(buffer, blocks[file->i_directos[i]], 1024); // Nos traemos nuestro bloque en la pos file->i_directos[i]
         if(strlen(buffer) < 1024){
             buffer[strlen(buffer)] = contenido;
-            memcpy(file->i_directos[i], buffer, 1024);
+            memcpy(blocks[file->i_directos[i]], buffer, 1024); // Guardamos el bloque modificado
             end = 1;
         }
         memset(buffer, 0, 1024);
         i++;
-    } 
+    }
 
     if(!end && i < N_DIRECTOS) {
         // Estamos ante un bloque vacío
         buffer[0] = contenido;
-        file->i_directos[i] = malloc(sizeof(char) * 1024);
-        memcpy(file->i_directos[i], buffer, 1024);
+        file->i_directos[i] = create_block();
+        memcpy(blocks[file->i_directos[i]], buffer, 1024);
         // Liberamos el espacio reservado para el buffer
         free(buffer);
         buffer = NULL;
@@ -68,36 +68,28 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
         if (file->i_simple_ind[0] == NULL){
 
             //Crear bloque de punteros directos
-            long *ptr = malloc(sizeof(char)*1024);
-            memset(ptr, 0, 1024); // Esta línea no estaba antes
-            printf("Dirección simple_ind: %p\n", ptr);
-            printf("Contenido simple_ind: %s\n", *ptr);
-            file->i_simple_ind[0] = ptr;
+            file->i_simple_ind[0] = create_block();
         }
 
         // Obtener todos los bloques directos del puntero indirecto
-        block_list blocks = get_blocks_indirect(file->i_simple_ind[0]);
-
-        //Encontrar el primer bloque con hueco
-        //Se crea un buffer donde se guarda el contenido del bloque
-        char *buffer = malloc(sizeof(char)*1024);
+        block_list blocks_aux = get_blocks_indirect(file->i_simple_ind[0]);
 
         // Se itera la lista con un puntero auxiliar
-        block_list aux = blocks;
+        block_list aux = blocks_aux;
         
-        if (aux != NULL) memcpy(buffer, aux->block, 1024);
+        if (aux != NULL) memcpy(buffer, blocks[aux->block_index], 1024);
 
         while (aux != NULL && strlen(buffer) == 1024){
             aux = aux->next;
-            if (aux != NULL) memcpy(buffer, aux->block, 1024);
+            if (aux != NULL) memcpy(buffer, blocks[aux->block_index], 1024);
         }
 
         // Si aux es NULL, no hay bloques libres
         // Creamos un bloque nuevo con el caracter
         if (aux == NULL){
-            //TODO: hay que comprobar si hay espacio en el puntero indirecto
-            char *new_block = malloc(sizeof(char)*1024);
-            new_block[0] = contenido;
+            // TODO: hay que comprobar si hay espacio en el puntero indirecto
+            long new_block = create_block();
+            blocks[new_block][0] = contenido;
             // Se añade el puntero del bloque al bloque indirecto
             //TODO: Es una funcion que dado un puntero indirecto y un bloque directo, lo añade al puntero indirecto
             add_block_indirect(file->i_simple_ind[0], new_block);
@@ -105,51 +97,49 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
             // Si aux no es NULL, hay un bloque con hueco
             // Se añade el caracter al bloque
             buffer[strlen(buffer)] = contenido;
-            memcpy(aux->block, buffer, 1024);
-            free(buffer);
+            memcpy(blocks[aux->block_index], buffer, 1024);
         }
+        free(buffer); 
+    }else{
+        free(buffer);
     }
-    
 }
 
 void clean_inode(struct inode_fs *file) {
     // Limpiamos primero los directos
     for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
-        memset(file -> i_directos[i], 0, 1024);
+        memset(blocks[file -> i_directos[i]], 0, 1024);
         file -> i_directos[i] = NULL;
     }
     file -> i_tam = 0;
 }
 
 // Función que trae los bloques de los punteros indirectos
-block_list get_blocks_indirect(long *i_indirecto)
+block_list get_blocks_indirect(long i_indirecto)
 {
     block_list blocks = malloc(sizeof(struct block_list));
     blocks = NULL;
     
-    int i = 0;
-    long *current = malloc(sizeof(long));
-    long *next = malloc(sizeof(long));
+    int i = 0, offset = 0;
+    long current,next;
 
-    int offset = sizeof(long);
-
-    memcpy(current, i_indirecto, sizeof(long));
-    printf("current: %s\n", *current);
-    if(*current == NULL){
+    memcpy(&current, blocks[i_indirecto], sizeof(long));
+    if(current == NULL){
         return blocks; // Antes era blocks
     }
     i++;
-    memcpy(next, i_indirecto + offset*i, sizeof(long));
-    blocks -> block = current;
+    offset = i * sizeof(long);
+    memcpy(&next, blocks[i_indirecto] + offset, sizeof(long));
+    blocks -> block_index = current;
     blocks -> next = NULL;
     block_list aux = blocks;
     while(next != NULL){
-        aux->block = current;
+        aux->block_index = current;
         aux->next = next;
         current = next;
         aux = aux->next;
         i++;
-        memcpy(next, i_indirecto + offset, sizeof(long));
+        memcpy(&next, blocks[i_indirecto] + offset, sizeof(long));
     }
 
     aux->block = current;
@@ -159,18 +149,20 @@ block_list get_blocks_indirect(long *i_indirecto)
 }
 
 // Función que añade un bloque al puntero indirecto
-void add_block_indirect(long *indirect_pointer, long direct_pointer){
+void add_block_indirect(long indirect_pointer, long direct_pointer){
     // Localizar el primer hueco en el puntero indirecto
-    int i = 0;
-    int offset = sizeof(long);
-    long *pointer = malloc(sizeof(long));
-    memcpy(pointer, indirect_pointer + offset*i, sizeof(long));
-    while(*pointer != NULL){
+    int i = 0; // Posicion dentro del bloque
+    int offset = 0; // Tamaño de un puntero
+    long block_index;
+    // Nos traemos el bloque
+    memcpy(block_index, block[indirect_pointer] + offset, sizeof(long));
+    while(block_index != NULL){
         i++;
-        memcpy(pointer, indirect_pointer + offset, sizeof(long));
+        offset = sizeof(long)*i;
+        memcpy(block_index, block[indirect_pointer] + offset, sizeof(long));
     }
-    //Añadir el bloque al puntero indirecto
-    memcpy(indirect_pointer + offset, &direct_pointer, sizeof(long));
+    // Añadimos el bloque al puntero indirecto
+    memcpy(block[indirect_pointer] + offset, &direct_pointer, sizeof(long));
 }
 
 // Función que trae los bloques de los punteros indirectos dobles
@@ -193,7 +185,15 @@ long create_block(){
     return index;
 }
 
-
+int remove_block(long index)
+{
+    if(index < 0 || index > NUM_BLOCKS){
+        return -1;
+    }
+    blocks[index] = NULL;
+    remove_block_bitmap(index);
+    return 0;
+}
 
 
 

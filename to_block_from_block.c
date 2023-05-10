@@ -32,13 +32,14 @@ int main()
     //Guardar en el mismo bloque de memoria la entrada de directorio dos veces.
     char test[20] = "Esto es una prueba";
     long block_index = create_block();
+    long aux;
 
     //Copiamos el puntero direct a block_mem
-    memcpy(blocks[block_index],test,strlen(test));
+    memcpy(&aux,blocks[block_index],sizeof(long));
 
     //Mostramos el contenido y la direccion de block mem
-    printf("Contenido de block_mem: %s\n", blocks[block_index]);
-    printf("Direccion de block_mem: %ld\n", &blocks[block_index]);
+    printf("Contenido de block_mem: %s\n", aux);
+    printf("Direccion de block_mem: %ld\n", &aux);
 
     //memcpy(block_mem,test_fran,sizeof(directory_entry));
     // memcpy(block_mem+sizeof(directory_entry),test_fran,sizeof(directory_entry));

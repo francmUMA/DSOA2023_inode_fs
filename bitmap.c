@@ -16,7 +16,7 @@
 //Primero se busca la primera posicion que tiene un byte diferente de 0xFF, es decir, que tenga un 0.
 //Hay un total de NUM_INODES inodos, por lo que se divide entre 8 para saber el numero de bytes que hay que recorrer.
 
-int free_inode(struct inode_bitmap_fs *inode_bitmap){
+int free_inode(){
     int byte = 0; 
 
     //Encontramos el primer byte que no es 0xFF
@@ -37,7 +37,7 @@ int free_inode(struct inode_bitmap_fs *inode_bitmap){
 }
 
 //Limpiar un inodo del bitmap de inodos
-void remove_inode_bitmap(struct inode_bitmap_fs *inode_bitmap, int inode){
+void remove_inode_bitmap(int inode){
     int byte = inode / 8;
     int bit = 7 - (inode % 8);
     (*inode_bitmap).bitmap[byte] &= ~(1 << bit);
@@ -64,7 +64,7 @@ long free_block(){
 }
 
 //Limpiar un inodo del bitmap de inodos
-void remove_block_bitmap(struct block_bitmap_fs *block_bitmap, long block){
+void remove_block_bitmap(long block){
     int byte = block / 8;
     int bit = 7 - (block % 8);
     (*block_bitmap).bitmap[byte] &= ~(1 << bit);
