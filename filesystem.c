@@ -39,14 +39,16 @@ int main()
     char *content = read_file("/home/usuario/Desktop/test.txt");
     printf("%s\n", content);
 
-    char test[12000];
-    for (int i = 0; i < 12000; i++)
+    char test[100000];
+    for (int i = 0; i < 100000; i++)
     {
         test[i] = 'a';
     }
     overwrite("/home/usuario/Desktop/test.txt", test);
+    char *content2 = read_file("/home/usuario/Desktop/test.txt");
+    printf("%d\n", strlen(content2));
     append("/home/usuario/Desktop/test.txt", "\nEsto es otra prueba");
 
     char *content1 = read_file("/home/usuario/Desktop/test.txt");
-    printf("%s\n", content1);
+    printf("%d\n", strlen(content1));
 }

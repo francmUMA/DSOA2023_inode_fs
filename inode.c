@@ -81,7 +81,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
 
         while (aux != NULL && strlen(buffer) == 1024){
             aux = aux->next;
-            if (aux != NULL) memcpy(buffer, blocks[aux->block_index], 1024);
+            if (aux != NULL ) memcpy(buffer, blocks[aux->block_index], 1024);
         }
 
         // Si aux es NULL, no hay bloques libres
@@ -99,7 +99,8 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
             buffer[strlen(buffer)] = contenido;
             memcpy(blocks[aux->block_index], buffer, 1024);
         }
-        free(buffer); 
+        free(buffer);
+        free(blocks_aux);
     }else{
         free(buffer);
     }
@@ -118,7 +119,41 @@ void clean_inode(struct inode_fs *file) {
 block_list get_blocks_indirect(long i_indirecto)
 {
     //TODO
-    ;
+    block_list *list = malloc(sizeof(struct block_list));
+    if(blocks[i_indirecto] == NULL){
+        *list = NULL;
+    }else{
+        // Creamos el primer elemento
+        long index;
+        memcpy(&index, blocks[i_indirecto], 8);
+        if(index != NULL){
+            int i = 1;
+            int offset = 0;
+            block_list first = malloc(sizeof(struct block_list));
+            first->block_index = index;
+            first->next = NULL;
+            *list = first;
+            block_list aux = malloc(sizeof(struct block_list));
+            aux = (*list);
+            while(offset < 128 && aux != NULL){
+                offset = i * sizeof(long);
+                memcpy(&index, blocks[i_indirecto] + offset, 8);
+                if(index != NULL)
+                {
+                    block_list new = malloc(sizeof(struct block_list));
+                    new->block_index = index;
+                    new->next = NULL;
+                    aux->next = new;
+                }
+                
+                aux = aux->next;
+                i++;
+            }
+        }else{
+            *list = NULL;
+        }
+    }
+    return *list;
 }
 
 // Función que añade un bloque al puntero indirecto
@@ -129,7 +164,7 @@ void add_block_indirect(long indirect_pointer, long direct_pointer){
     long block_index;
     // Nos traemos el bloque
     memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));
-    while(block_index != NULL){
+    while(offset < 128 && block_index != NULL){
         i++;
         offset = sizeof(long)*i;
         memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));
