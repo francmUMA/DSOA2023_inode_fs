@@ -141,6 +141,7 @@ int append(char* path, char *contenido)
         add_char_to_inode(file, contenido[i]);
     }
     file -> i_tam += strlen(contenido);
+    free(file);
 
     return 0;
 }
@@ -188,7 +189,13 @@ char *read_file(char *path){
         }
         memset(buffer, 0, sizeof(char) * 1024);
     }
+    if(file->i_simple_ind[0] == NULL){
+        free(buffer);
+        return res;
+    }
+
     block_list direct_blocks_indirect = get_blocks_indirect(file -> i_simple_ind[0]);
+    
     while(direct_blocks_indirect != NULL){
         memcpy(buffer, blocks[direct_blocks_indirect -> block_index], sizeof(char) * 1024);
         for(int j = 0; j < 1024 && counter < file -> i_tam; j++){

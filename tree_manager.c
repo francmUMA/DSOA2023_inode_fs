@@ -50,11 +50,11 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
         memcpy(blocks[directory_dst->i_directos[i]], entry, sizeof(struct directory_entry));
 
         entry = NULL;
-        free(entry);
     }
     else if (!end) {
         printf("No hay espacio en el directorio\n");
     }
+    free(entry);
 }
 
 //Eliminar una entrada de directorio
@@ -84,11 +84,11 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
         i++;
     }
     if (end){
-        free(entry);
         entry = NULL;
     } else {
         printf("No se ha encontrado la entrada de directorio\n");
     }
+    free(entry);
 }
 
 // Función para buscar un inodo en un directorio concreto
@@ -117,7 +117,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
             }
         }
     }
-
+    free(entry);
     return res;
 }
 
