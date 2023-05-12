@@ -125,6 +125,7 @@ block_list get_blocks_indirect(long i_indirecto)
     }else{
         // Creamos el primer elemento
         long index;
+        long contenido;
         memcpy(&index, blocks[i_indirecto], 8);
         if(index != NULL){
             int i = 1;

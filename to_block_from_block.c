@@ -35,6 +35,9 @@ int main()
     long aux;
 
     //Copiamos el puntero direct a block_mem
+    memcpy(blocks[block_index], test, 20);
+    printf("Contenido: %s\n", blocks[block_index]);
+    printf("Direccion: %ld\n", &blocks[block_index]);
     memcpy(&aux,blocks[block_index],sizeof(long));
 
     //Mostramos el contenido y la direccion de block mem
