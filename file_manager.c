@@ -195,7 +195,7 @@ char *read_file(char *path){
 
     block_list direct_blocks_indirect = get_blocks_indirect(file -> i_simple_ind[0]);
     
-    while(direct_blocks_indirect != NULL){
+    while(direct_blocks_indirect != NULL && direct_blocks_indirect -> block_index < NUM_BLOCKS){
         memcpy(buffer, blocks[direct_blocks_indirect -> block_index], sizeof(char) * 1024);
         for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
             res[counter] = buffer[j];

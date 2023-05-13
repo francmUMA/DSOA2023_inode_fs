@@ -73,14 +73,14 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
         
         if (blocks_aux != NULL) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
 
-        while (blocks_aux != NULL && strlen(buffer) == 1024){
+        while (blocks_aux != NULL && strlen(buffer) == 1024 && blocks_aux->block_index < NUM_BLOCKS){
             blocks_aux = blocks_aux->next;
             if ((blocks_aux != NULL) && (blocks_aux -> block_index != NULL) && (blocks_aux -> block_index < NUM_BLOCKS)) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
         }
 
         // Si aux es NULL, no hay bloques libres
         // Creamos un bloque nuevo con el caracter
-        if (blocks_aux == NULL){
+        if (blocks_aux == NULL || blocks_aux->block_index == NULL || blocks_aux->block_index >= NUM_BLOCKS){
             // TODO: hay que comprobar si hay espacio en el puntero indirecto
             long new_block = create_block();
             blocks[new_block][0] = contenido;
@@ -114,46 +114,50 @@ void clean_inode(struct inode_fs *file) {
 block_list get_blocks_indirect(long i_indirecto)
 {
     //TODO
-    block_list *list = malloc(sizeof(struct block_list));
+    block_list *head = malloc(sizeof(struct block_list));
     if(blocks[i_indirecto] == NULL){
-        *list = NULL;
+        *head = NULL;
     }else{
-        long index;
-        int offset, i = 0;
-        memcpy(&index, blocks[i_indirecto], 8);
-        if(index == NULL){
-            *list = NULL;
-            return *list;
-        }
-        // Creamos el primer bloque
-        block_list node = malloc(sizeof(struct block_list));
-        node -> block_index = index;
-        node -> next = NULL;
-        (*list) = node;
+        int i = 0;
+        int offset = 0;
+        long block_index;
 
-        // Creamos el puntero auxiliar para iterar
-        block_list aux = malloc(sizeof(struct block_list));
-        aux = (*list);
+        // Accedemos al primer puntero del bloque para ver si existe
+        memcpy(&block_index, blocks[i_indirecto] + offset, sizeof(long));
 
-        // Tenemos el primer índice
-        i++;
-        while(i < 128 && index != NULL){
-            offset = sizeof(long) * i;
-            // Crear nodo por cada bloque directo
-            block_list new_node = malloc(sizeof(struct block_list));
-            new_node -> block_index = index;
-            new_node -> next = NULL;
-            aux->next = new_node;
-            aux = aux->next;
-            memcpy(&index, blocks[i_indirecto] + offset, 8);
-            if(index < 0 || index >= NUM_BLOCKS){
-                index = NULL;
-            }
+        // Si no existe, devolvemos NULL
+        if(block_index == NULL){
+            *head = NULL;
+        } else {
+            // Si existe, creamos el nodo head
+            block_list node = malloc(sizeof(struct block_list));
+            node -> block_index = block_index;
+            node -> next = NULL;
+            *head = node;
+
+            // Hasta aqui tenemos una lista con un nodo solo
+            // Vamos a crear el resto de nodos
             i++;
+            offset = sizeof(long)*i;
+            block_list aux = *head;
+
+            while(offset < 1024 && block_index != NULL){
+                memcpy(&block_index, blocks[i_indirecto] + offset, sizeof(long));
+                // Creamos el nodo
+                block_list new_node = malloc(sizeof(struct block_list));
+                new_node -> block_index = block_index;
+                new_node -> next = NULL;
+
+                // Lo añadimos a la lista
+                aux -> next = new_node;
+                aux = aux -> next;
+                // Actualizamos el offset
+                i++;
+                offset = sizeof(long)*i;
+            }
         }
-        free(aux);
     }
-    return *list;
+    return *head;
 }
 
 // Función que añade un bloque al puntero indirecto
