@@ -89,6 +89,7 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
         printf("No se ha encontrado la entrada de directorio\n");
     }
     free(entry);
+    entry = NULL;
 }
 
 // Función para buscar un inodo en un directorio concreto
@@ -118,6 +119,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
         }
     }
     free(entry);
+    entry = NULL;
     return res;
 }
 

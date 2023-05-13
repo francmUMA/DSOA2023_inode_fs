@@ -70,20 +70,17 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
 
         // Obtener todos los bloques directos del puntero indirecto
         block_list blocks_aux = get_blocks_indirect(file->i_simple_ind[0]);
-
-        // Se itera la lista con un puntero auxiliar
-        block_list aux = blocks_aux;
         
-        if (aux != NULL) memcpy(buffer, blocks[aux->block_index], 1024);
+        if (blocks_aux != NULL) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
 
-        while (aux != NULL && strlen(buffer) == 1024){
-            aux = aux->next;
-            if (aux != NULL ) memcpy(buffer, blocks[aux->block_index], 1024);
+        while (blocks_aux != NULL && strlen(buffer) == 1024){
+            blocks_aux = blocks_aux->next;
+            if ((blocks_aux != NULL) && (blocks_aux -> block_index != NULL) && (blocks_aux -> block_index < NUM_BLOCKS)) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
         }
 
         // Si aux es NULL, no hay bloques libres
         // Creamos un bloque nuevo con el caracter
-        if (aux == NULL){
+        if (blocks_aux == NULL){
             // TODO: hay que comprobar si hay espacio en el puntero indirecto
             long new_block = create_block();
             blocks[new_block][0] = contenido;
@@ -94,9 +91,10 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
             // Si aux no es NULL, hay un bloque con hueco
             // Se añade el caracter al bloque
             buffer[strlen(buffer)] = contenido;
-            memcpy(blocks[aux->block_index], buffer, 1024);
+            memcpy(blocks[blocks_aux->block_index], buffer, 1024);
         }
         free(blocks_aux);
+        blocks_aux = NULL;
     }
     // Liberamos el espacio reservado para el buffer
     free(buffer);
@@ -132,8 +130,11 @@ block_list get_blocks_indirect(long i_indirecto)
         node -> block_index = index;
         node -> next = NULL;
         (*list) = node;
+
         // Creamos el puntero auxiliar para iterar
-        block_list aux = (*list);
+        block_list aux = malloc(sizeof(struct block_list));
+        aux = (*list);
+
         // Tenemos el primer índice
         i++;
         while(i < 128 && index != NULL){
@@ -145,11 +146,12 @@ block_list get_blocks_indirect(long i_indirecto)
             aux->next = new_node;
             aux = aux->next;
             memcpy(&index, blocks[i_indirecto] + offset, 8);
-            if(index < 0 || index > 1023){
+            if(index < 0 || index >= NUM_BLOCKS){
                 index = NULL;
             }
             i++;
         }
+        free(aux);
     }
     return *list;
 }

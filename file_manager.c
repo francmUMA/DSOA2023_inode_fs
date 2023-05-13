@@ -141,7 +141,6 @@ int append(char* path, char *contenido)
         add_char_to_inode(file, contenido[i]);
     }
     file -> i_tam += strlen(contenido);
-    free(file);
 
     return 0;
 }
