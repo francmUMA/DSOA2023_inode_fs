@@ -11,9 +11,15 @@
 
 struct inode_fs *create_inode(char type, char *name){
     struct inode_fs *new_inode = malloc(sizeof(struct inode_fs));
-    new_inode -> i_type = type;
-    new_inode -> i_tam = 0;
     strcpy(new_inode -> i_name, name);
+    new_inode -> i_type = type;
+    if (type == 'd'){
+        new_inode -> i_permission = 0755;
+    } else if (type == '-'){
+        new_inode -> i_permission = 0644;
+    }
+    new_inode -> i_links = 0;
+    new_inode -> i_tam = 0;
     new_inode -> i_num = free_inode();
     return new_inode;
 }
@@ -22,6 +28,7 @@ struct inode_fs *create_inode(char type, char *name){
 struct inode_fs *create_root(){
     struct inode_fs *root = create_inode('d', "/");
     insert(".", root, root);
+    insert("..", root, root);
     return root;
 }
 

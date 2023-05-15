@@ -4,7 +4,28 @@
 #include <string.h>
 
 // Create a new file with the given name in the given directory
-void touch(char *name, char type, char *path_directory){
+void touch(char *path, char type){
+    // Get the name of the directory and the name of the file
+    char *path_directory = malloc(strlen(path));
+    char *name = malloc(24);
+    memset(path_directory, 0, strlen(path_directory));
+    memset(name, 0, 24);
+    char path_aux[strlen(path)];
+    strcpy(path_aux, path);
+    char *token = strtok(path_aux, "/");
+    while (token != NULL){
+        strcpy(name, token);
+        token = strtok(NULL, "/");
+        if (token != NULL){
+            strcat(path_directory, "/");
+            strcat(path_directory, name);
+        }
+    }
+
+    if (strcmp(path_directory, "") == 0){
+        strcpy(path_directory, ".");
+    }
+
     // Search for the directory
     struct inode_fs *dir = search_directory(path_directory);
     if(dir == NULL){
@@ -28,7 +49,9 @@ void touch(char *name, char type, char *path_directory){
     }  
 
     // Add the file to the directory
-    insert(name, dir, new_file); 
+    insert(name, dir, new_file);
+    free(path_directory);
+    free(name); 
 }
 
 // Print the directory tree
@@ -58,7 +81,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
 }
 
 
-void rm(char *name, char *path_directory){
+void unlink(char *name, char *path_directory){
     // Search for the directory
     struct inode_fs *dir = search_directory(path_directory);
     if(dir == NULL){
@@ -75,12 +98,15 @@ void rm(char *name, char *path_directory){
         printf("Cannot remove a directory\n");
         return;
     }
+    file -> i_links -= 1;
 
     // Remove the file from the directory
     remove_entry(name, dir);
 
     // Remove the file
-    remove_inode(file);
+    if (file -> i_links == 0){
+        remove_inode(file);
+    }
 }
 
 // Borrar directorio vacío

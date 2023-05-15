@@ -22,7 +22,7 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
         {
             // Guardamos nuestra entrada de bloque
             strcpy(entry->name, name);
-
+            n_node -> i_links += 1;
             entry->inode = n_node;
             // Copiado el bloque
             memcpy(blocks[directory_dst->i_directos[i]]+offset, entry,sizeof(struct directory_entry));
@@ -126,7 +126,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
 struct inode_fs *search(char *path){
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
     struct inode_fs *current_inode = malloc(sizeof(struct inode_fs));
-    char path_aux[24], cmp_path[500] = "";
+    char path_aux[strlen(path)], cmp_path[500] = "";
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     

@@ -17,20 +17,19 @@ int main()
     root = create_root();
 
     // Creamos el directorio /home
-    touch("home", 'd', ".");
+    touch("/home", 'd');
 
     // Creamos el directorio /home/usuario
-    touch("usuario", 'd', "/home");
+    touch("/home/usuario", 'd');
 
     // Creamos el directorio /home/usuario/Desktop
-    touch("Desktop", 'd', "/home/usuario");
+    touch("/home/usuario/Desktop", 'd');
 
     // Creamos el directorio /dev
-    touch("dev", 'd', ".");
+    touch("/dev", 'd');
 
     // Creamos el archivo diego_cipote.txt
-    touch("test.txt", '-', "/home/usuario/Desktop");
-    // print_directory(*root);
+    touch("/home/usuario/Desktop/test.txt", '-');
 
     // Añadimos contenido al archivo test.txt
     append("/home/usuario/Desktop/test.txt", "Esto es una prueba");
@@ -47,10 +46,10 @@ int main()
     overwrite("/home/usuario/Desktop/test.txt", test);
     char *content2 = read_file("/home/usuario/Desktop/test.txt");
     printf("%d\n", strlen(content2));
-    for(int i = 0; i < 900; i++){
-        append("/home/usuario/Desktop/test.txt", "a");
-    }
-    //append("/home/usuario/Desktop/test.txt", "a");
+    // for(int i = 0; i < 900; i++){
+    //     append("/home/usuario/Desktop/test.txt", "a");
+    // }
+    append("/home/usuario/Desktop/test.txt", "a");
     char *content1 = read_file("/home/usuario/Desktop/test.txt");
     printf("%d\n", strlen(content1));
 }
