@@ -50,7 +50,7 @@ int main()
     for(int i = 0; i < 900; i++){
         append("/home/usuario/Desktop/test.txt", "a");
     }
-    append("/home/usuario/Desktop/test.txt", "a");
+    //append("/home/usuario/Desktop/test.txt", "a");
     char *content1 = read_file("/home/usuario/Desktop/test.txt");
     printf("%d\n", strlen(content1));
 }

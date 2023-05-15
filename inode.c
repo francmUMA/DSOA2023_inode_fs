@@ -72,10 +72,11 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
         block_list blocks_aux = get_blocks_indirect(file->i_simple_ind[0]);
         
         if (blocks_aux != NULL) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
-
+        int strlen_buffer = strlen(buffer);
         while (blocks_aux != NULL && strlen(buffer) == 1024 && blocks_aux->block_index < NUM_BLOCKS){
             blocks_aux = blocks_aux->next;
             if ((blocks_aux != NULL) && (blocks_aux -> block_index != NULL) && (blocks_aux -> block_index < NUM_BLOCKS)) memcpy(buffer, blocks[blocks_aux->block_index], 1024);
+            strlen_buffer = strlen(buffer);
         }
 
         // Si aux es NULL, no hay bloques libres
@@ -141,7 +142,7 @@ block_list get_blocks_indirect(long i_indirecto)
             offset = sizeof(long)*i;
             block_list aux = *head;
 
-            while(offset < 1024 && block_index != NULL){
+            while(offset < 1024 && block_index != NULL && block_index < NUM_BLOCKS){
                 memcpy(&block_index, blocks[i_indirecto] + offset, sizeof(long));
                 // Creamos el nodo
                 block_list new_node = malloc(sizeof(struct block_list));
@@ -168,7 +169,7 @@ void add_block_indirect(long indirect_pointer, long direct_pointer){
     long block_index;
     // Nos traemos el bloque
     memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));
-    while(offset < 1024 && block_index != NULL){
+    while(offset < 1024 && block_index != NULL && block_index < NUM_BLOCKS){
         i++;
         offset = sizeof(long)*i;
         memcpy(&block_index, blocks[indirect_pointer] + offset, sizeof(long));

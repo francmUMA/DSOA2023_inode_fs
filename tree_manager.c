@@ -123,8 +123,7 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     return res;
 }
 
-struct inode_fs *search(char *path)
-{
+struct inode_fs *search(char *path){
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
     struct inode_fs *current_inode = malloc(sizeof(struct inode_fs));
     char path_aux[24], cmp_path[500] = "";
