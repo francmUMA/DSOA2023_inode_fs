@@ -106,6 +106,7 @@ void add_block_indirect(long, long);
 long create_block();
 
 // file_manager.c
+char *get_directory(char *);
 void touch(char *, char);
 void print_directory(struct inode_fs);
 void unlink(char *, char *);
@@ -113,6 +114,7 @@ void rmdir(char *);
 int append(char *, char *);
 int overwrite(char *, char *);
 char *read_file(char *);
+void rename(char *, char *);
 
 // tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);

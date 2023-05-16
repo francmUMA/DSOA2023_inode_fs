@@ -3,6 +3,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+char *get_path_directory(char* path)
+{
+    // Get the name of the directory and the name of the file
+    char *path_directory = malloc(strlen(path));
+    memset(path_directory, 0, strlen(path_directory));
+    char path_aux[strlen(path)];
+    strcpy(path_aux, path);
+    char *token = strtok(path_aux, "/");
+    while (token != NULL){
+        token = strtok(NULL, "/");
+        if (token != NULL){
+            strcat(path_directory, "/");
+            strcat(path_directory, token);
+        }
+    }
+    return path_directory;
+}
+
 // Create a new file with the given name in the given directory
 void touch(char *path, char type){
     // Get the name of the directory and the name of the file
@@ -154,11 +173,11 @@ int append(char* path, char *contenido)
     }
 
     // Comprobamos que el contenido no sea mayor que 
-    // if(strlen(contenido) > (sizeof(char) * 1024 * 10))
-    // {
-    //     printf("El contenido es mayor que el tamaño del archivo\n");
-    //     return -1;
-    // }
+    if((strlen(contenido) + file->i_tam) > (sizeof(char) * 1024 * 27))
+    {
+        printf("El contenido es mayor que el tamaño del archivo\n");
+        return -1;
+    }
 
     // Añadir caracter al inodo
     int i;
@@ -166,6 +185,7 @@ int append(char* path, char *contenido)
     {
         add_char_to_inode(file, contenido[i]);
     }
+
     file -> i_tam += strlen(contenido);
 
     return 0;
@@ -233,4 +253,31 @@ char *read_file(char *path){
     free(buffer);
 
     return res;
+}
+
+void rename(char *path, char *new_name){
+    //TODO
+    struct inode_fs *file = search(path);
+    if (file == NULL){
+        printf("File not found\n");
+        return;
+    }
+
+    // Buscamos el directorio padre
+    char *parent_path = get_path_directory(path);
+    struct inode_fs *parent = search_directory(parent_path);
+
+    // Buscamos en el directorio
+    struct inode_fs *new_file = search_in_directory(new_name, *parent);
+
+    if(new_file != NULL)
+    {
+        printf("Ya existe un archivo con ese nombre\n");
+        return;
+    }
+
+    // Cambiamos el nombre
+    strcpy(file->i_name, new_name);
+    remove_entry(path, parent);
+    insert(new_name, parent, file);
 }

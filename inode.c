@@ -186,16 +186,16 @@ void add_block_indirect(long indirect_pointer, long direct_pointer){
 }
 
 // Función que trae los bloques de los punteros indirectos dobles
-block_list get_blocks_indirect_double(long i_double_indirecto)
-{
-    ;
-}
+// block_list get_blocks_indirect_double(long i_double_indirecto)
+// {
+//     ;
+// }
 
-// Función que trae los bloques de los punteros indirectos triples
-block_list get_blocks_indirect_triple(long i_triple_indirecto)
-{
-    ;
-}
+// // Función que trae los bloques de los punteros indirectos triples
+// block_list get_blocks_indirect_triple(long i_triple_indirecto)
+// {
+//     ;
+// }
 
 long create_block(){
     long *block = malloc(1024);
