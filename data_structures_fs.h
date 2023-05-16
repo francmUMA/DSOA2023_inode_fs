@@ -114,7 +114,7 @@ void rmdir(char *);
 int append(char *, char *);
 int overwrite(char *, char *);
 char *read_file(char *);
-void rename(char *, char *);
+void rename_file(char *, char *);
 
 // tree_manager.c
 void insert(char *, struct inode_fs *, struct inode_fs *);

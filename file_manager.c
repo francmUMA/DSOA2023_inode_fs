@@ -8,17 +8,21 @@ char *get_path_directory(char* path)
 {
     // Get the name of the directory and the name of the file
     char *path_directory = malloc(strlen(path));
+    char *name = malloc(24);
     memset(path_directory, 0, strlen(path_directory));
+    memset(name, 0, 24);
     char path_aux[strlen(path)];
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     while (token != NULL){
+        strcpy(name, token);
         token = strtok(NULL, "/");
         if (token != NULL){
             strcat(path_directory, "/");
-            strcat(path_directory, token);
+            strcat(path_directory, name);
         }
     }
+    free(name);
     return path_directory;
 }
 
@@ -84,7 +88,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
     while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
         // Recorremos el bloque
         memcpy(entry, blocks[directory.i_directos[i]]+offset, sizeof(struct directory_entry));
-        for(int j = 1; j < 32 && entry != NULL; j++){ // j es offset
+        for(int j = 1; j < 32 && entry->inode != NULL; j++){ // j es offset
             // Print the entry
             offset = sizeof(struct directory_entry)*j;
             printf("%s ", entry->name);
@@ -139,17 +143,26 @@ void rmdir(char* path)
     }
 
     int i = 0;
+    struct directory_entry *entry = malloc(sizeof(struct directory_entry));
+    memcpy(entry, blocks[(*current_dir).i_directos[0]], sizeof(struct directory_entry));
     // Comprobamos que el directorio está vacío
-    while(i < N_DIRECTOS && (*current_dir).i_directos[i] == NULL){
+    while(entry->inode != NULL)
+    {
         i++;
+        memcpy(entry, blocks[(*current_dir).i_directos[0]] + sizeof(struct directory_entry) * i, sizeof(struct directory_entry));
     }
 
-    if(i == N_DIRECTOS){
-        // Esta vacío
-        // Eliminamos la entrada de directorio
-        struct inode_fs *parent = search_in_directory("..", *current_dir);
-        remove_entry(path, parent); 
-        // Liberamos el inodo
+    if(i > 2)
+    {
+        printf("El directorio no está vacío\n");
+        return;
+    }else{
+        // Eliminamos las entradas . y ..
+        memcpy(entry, blocks[(*current_dir).i_directos[0]] + 32, sizeof(struct directory_entry));
+        remove_entry(current_dir -> i_name, (*entry).inode);
+        remove_entry("..", current_dir);
+        remove_entry(".", current_dir);
+        // Eliminamos el directorio
         remove_inode(current_dir);
     }
 }
@@ -255,7 +268,7 @@ char *read_file(char *path){
     return res;
 }
 
-void rename(char *path, char *new_name){
+void rename_file(char *path, char *new_name){
     //TODO
     struct inode_fs *file = search(path);
     if (file == NULL){
@@ -277,7 +290,7 @@ void rename(char *path, char *new_name){
     }
 
     // Cambiamos el nombre
+    remove_entry(file->i_name, parent);
     strcpy(file->i_name, new_name);
-    remove_entry(path, parent);
     insert(new_name, parent, file);
 }

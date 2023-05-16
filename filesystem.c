@@ -38,18 +38,28 @@ int main()
     char *content = read_file("/home/usuario/Desktop/test.txt");
     printf("%s\n", content);
 
-    char test[27648];
-    for (int i = 0; i < 27648; i++)
-    {
-        test[i] = 'a';
-    }
-    overwrite("/home/usuario/Desktop/test.txt", test);
-    char *content2 = read_file("/home/usuario/Desktop/test.txt");
-    printf("%d\n", strlen(content2));
-    // for(int i = 0; i < 900; i++){
-    //     append("/home/usuario/Desktop/test.txt", "a");
+    // Rename de test.txt a test2.txt
+    rename_file("/home/usuario/Desktop/test.txt", "test2.txt");
+    printf("\n----------------------------------------------------------------------------------\n");
+    print_directory(*root);
+    printf("\n----------------------------------------------------------------------------------\n");
+    unlink("test2.txt", "/home/usuario/Desktop");
+    print_directory(*root);
+    printf("\n----------------------------------------------------------------------------------\n");
+    rmdir("/home/usuario/Desktop");
+    print_directory(*root);
+    // char test[27648];
+    // for (int i = 0; i < 27648; i++)
+    // {
+    //     test[i] = 'a';
     // }
-    append("/home/usuario/Desktop/test.txt", "a");
-    char *content1 = read_file("/home/usuario/Desktop/test.txt");
-    printf("%d\n", strlen(content1));
+    // // overwrite("/home/usuario/Desktop/test.txt", test);
+    // // char *content2 = read_file("/home/usuario/Desktop/test.txt");
+    // // printf("%d\n", strlen(content2));
+    // // // for(int i = 0; i < 900; i++){
+    // // //     append("/home/usuario/Desktop/test.txt", "a");
+    // // // }
+    // // append("/home/usuario/Desktop/test.txt", "a");
+    // // char *content1 = read_file("/home/usuario/Desktop/test.txt");
+    // // printf("%d\n", strlen(content1));
 }
