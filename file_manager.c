@@ -104,7 +104,7 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
 }
 
 
-void unlink(char *name, char *path_directory){
+void unlink_fs(char *name, char *path_directory){
     // Search for the directory
     struct inode_fs *dir = search_directory(path_directory);
     if(dir == NULL){
@@ -133,7 +133,7 @@ void unlink(char *name, char *path_directory){
 }
 
 // Borrar directorio vacío
-void rmdir(char* path)
+void rmdir_fs(char* path)
 {
     struct inode_fs *current_dir = search_directory(path);
     

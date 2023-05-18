@@ -10,8 +10,17 @@
 #define N_DOBLES 1
 #define N_TRIPLES 1
 
-#define NUM_BLOCKS 1000
+#define NUM_BLOCKS 1048576
 #define NUM_INODES 1000
+#define BLOCK_SIZE 4096
+
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 // Directorios
 struct directory_entry
@@ -20,65 +29,43 @@ struct directory_entry
     struct inode_fs *inode;
 };
 
-// Lista de bloques libres
-// typedef struct block *Free_blocks_list;
-
-// Descriptor de bloque
-//  struct block{
-//      long block_number;
-//      int block_size;
-//      Free_blocks_list next;
-//  };
-
-// Lista de inodos libres
-// typedef struct inode *Free_inodes_list;
-
-// Bloque directo
-typedef struct block_list *block_list;
-
-struct block_list
-{
-    long block_index;
-    block_list *next;
-};
-
 // Inodo
 struct inode_fs
 {
     int i_num;
     char i_type;
-    char i_name[24];
     int i_tam;
     int i_permission;
     int i_links;
     long i_directos[N_DIRECTOS];
     long i_simple_ind[N_SIMPLES];
-    // long i_double_ind[N_DOBLES];
-    // long i_triple_ind[N_TRIPLES];
-    // char i_relleno [20];
+    uint8_t i_relleno [16];
 };
 
-static long *blocks[NUM_BLOCKS];
-
-// SUPERBLOQUE
-//  struct superblock {
-//      long free_blocks;
-//      Free_blocks_list free_blocks_list;
-//      long inode_list_size;
-//      Free_inodes_list free_inodes_list;
-//      unsigned char MODIFIED; // Por si es modificado el superbloque
-//  };
+//SUPERBLOQUE
+ struct superblock_fs {
+    long inodes_count;
+    long blocks_count;
+    long free_blocks_count;
+    long free_inodes_count;
+    long first_data_block;
+    long first_inode_block;
+    long block_bitmap_first_block;
+    long inode_bitmap_first_block;
+    long block_size;
+    long inode_size;
+ };
 
 // BITMAP DE BLOQUES
 struct block_bitmap_fs
 {
-    unsigned char bitmap[NUM_BLOCKS / 8];
+    uint8_t bitmap[NUM_BLOCKS / 8];
 };
 
 // BITMAP DE INODOS
 struct inode_bitmap_fs
 {
-    unsigned char bitmap[NUM_INODES / 8];
+    uint8_t bitmap[NUM_INODES / 8];
 };
 
 struct inode_bitmap_fs *inode_bitmap;
@@ -101,7 +88,7 @@ struct inode_fs *create_root();
 void remove_inode(struct inode_fs *);
 void remove_entry(char *, struct inode_fs *);
 void clean_inode(struct inode_fs *);
-block_list get_blocks_indirect(long);
+//block_list get_blocks_indirect(long);
 void add_block_indirect(long, long);
 long create_block();
 
@@ -109,8 +96,8 @@ long create_block();
 char *get_directory(char *);
 void touch(char *, char);
 void print_directory(struct inode_fs);
-void unlink(char *, char *);
-void rmdir(char *);
+void unlink_fs(char *, char *);
+void rmdir_fs(char *);
 int append(char *, char *);
 int overwrite(char *, char *);
 char *read_file(char *);

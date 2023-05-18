@@ -4,65 +4,55 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-long create_block(){
-    long *block = malloc(1024);
-    memset(block, 0, 1024);
-    long index = free_block();
-    blocks[index] = block;
-    return index;
-}
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 int main()
 {
-    // HAY QUE INICIALIZAR EN EL FUSE MAIN
-    block_bitmap = malloc(sizeof(struct block_bitmap_fs));
-    inode_bitmap = malloc(sizeof(struct inode_bitmap_fs));
-    // directory_entry *test_fran = malloc(sizeof(directory_entry)); // Le reservamos memoria
-    // struct inode *inodo = malloc(sizeof(struct inode));
-    // int directos[10],simples[1];
-    // *inodo->i_directos = directos;
-    // *inodo->i_simple_ind = simples;
-    // inodo->i_type = '-';
-    // inodo->i_tam = 0;
-    // strcpy(test_fran->name, "prueba_search.txt"); // Guardo el nombre
+    // Abrir un fichero binario donde vamos a mapear toda la informacion
+    int fd = open("test.bin", O_CREAT | O_RDWR, 0666);
 
-    // test_fran->inode = inodo;
-    
-    //Guardar en el mismo bloque de memoria la entrada de directorio dos veces.
-    char test[20] = "Esto es una prueba";
-    long block_index = create_block();
-    long aux;
-
-    //Copiamos el puntero direct a block_mem
-    memcpy(blocks[block_index], test, 20);
-    printf("Contenido: %s\n", blocks[block_index]);
-    printf("Direccion: %ld\n", &blocks[block_index]);
-    memcpy(&aux,blocks[block_index],sizeof(long));
-
-    //Mostramos el contenido y la direccion de block mem
-    printf("Contenido de block_mem: %s\n", aux);
-    printf("Direccion de block_mem: %ld\n", &aux);
-
-    //memcpy(block_mem,test_fran,sizeof(directory_entry));
-    // memcpy(block_mem+sizeof(directory_entry),test_fran,sizeof(directory_entry));
-
-
-    //Mostrar el bloque donde se ha mapeado
-    //printf("Bloque de memoria: %ld", block_mem);
-
-    //Acceder a las entradas de directorio del bloque de memoria
-    //directory_entry *traido_mem = malloc(sizeof(directory_entry));
-    //memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
-    //printf("Entrada: %c", traido_mem->inode->i_type);
-    /*
-    memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
-    printf("Entrada: %s", traido_mem->name);
-
-    //Eliminamos la segunda entrada de directorio
-    memset(&block_mem+sizeof(directory_entry),0,sizeof(directory_entry));
-    memcpy(traido_mem,block_mem+sizeof(directory_entry),sizeof(directory_entry));
-    printf("Entrada: %s", traido_mem->name);
-    */
-    return 0;
+    if (fd == -1)
+    {
+        printf("Error al abrir el fichero\n");
+        return -1;
     }
+
+    // Escribimos un entero en el 4 byte
+    // lseek(fd, 8, SEEK_SET);
+    // int test1 = 2;
+    // write(fd, &test1, sizeof(int));
+
+    // // Mapeamos el entero que hay en el byte 8
+    // int *test2 = mmap(NULL, 3*sizeof(int), PROT_READ, MAP_SHARED, fd, 0);
+    // printf("El entero es: %d\n", test2[2]);
+
+    // // Unmapeamos el entero
+    // munmap(test2, 3*sizeof(int));
+
+    // // Eliminamos el entero
+    // lseek(fd, 8, SEEK_SET);
+    // int test3 = 0;
+    // write(fd, &test3, sizeof(int));
+
+    // Creamos el bitmap de bloques
+    // Mostramos el tamaño del bitmap
+    // printf("El tamaño del bitmap de bloques es: %ld\n", sizeof(struct block_bitmap_fs));
+    // block_bitmap = malloc(sizeof(struct block_bitmap_fs));
+    // memset(block_bitmap, 0, sizeof(struct block_bitmap_fs));
+    // int indice1 = free_block();
+    // write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
+    // free(block_bitmap);
+
+    block_bitmap = (struct block_bitmap_fs *) mmap(NULL, sizeof(struct block_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    int indice1 = free_block();
+    write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
+    munmap(block_bitmap, sizeof(struct block_bitmap_fs));
+
+    // Cerramos el fichero
+    close(fd);
+
+    return 0;
+}
