@@ -13,9 +13,10 @@
 
 int main()
 {
-    // create();
+    struct block_bitmap_fs *block_bitmap_aux = malloc(sizeof(struct block_bitmap_fs));
+    
     // Abrir un fichero binario donde vamos a mapear toda la informacion
-    fd = open("test.bin", O_CREAT | O_RDWR, 0666);
+    fd = open("filesystem.img", O_RDWR, 0666);
 
     if (fd == -1)
     {
@@ -23,56 +24,33 @@ int main()
         return -1;
     }
 
-    // Creamos block e inode bitmap
-    // block_bitmap = malloc(sizeof(struct block_bitmap_fs));
-    // inode_bitmap = malloc(sizeof(struct inode_bitmap_fs));
-    // memset(block_bitmap, 0, sizeof(struct block_bitmap_fs));
-    // memset(inode_bitmap, 0, sizeof(struct inode_bitmap_fs));
+    // Cogemos los datos del fichero binary
+    struct stat st;
 
-    // // Escribimos el superblock en el fichero
-    // write(fd, superblock, sizeof(struct superblock_fs));
+    // Si fstat es -1, hay un error
+    if (fstat(fd, &st))
+    {
+        printf("Error al obtener los datos del fichero\n");
+        return -1;
+    }
 
-    // // Nos desplazamos a la posicion del primer bloque del bitmap de bloques
-    // lseek(fd, superblock->block_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
-    // write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
-
-    // // Lo mismo pero para el bitmap de inodos
-    // lseek(fd, superblock->inode_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
-    // write(fd, inode_bitmap, sizeof(struct inode_bitmap_fs));
-
-    // Escribimos un entero en el 4 byte
-    // lseek(fd, 8, SEEK_SET);
-    // int test1 = 2;
-    // write(fd, &test1, sizeof(int));
-
-    // // Mapeamos el entero que hay en el byte 8
-    // int *test2 = mmap(NULL, 3*sizeof(int), PROT_READ, MAP_SHARED, fd, 0);
-    // printf("El entero es: %d\n", test2[2]);
-
-    // // Unmapeamos el entero
-    // munmap(test2, 3*sizeof(int));
-
-    // // Eliminamos el entero
-    // lseek(fd, 8, SEEK_SET);
-    // int test3 = 0;
-    // write(fd, &test3, sizeof(int));
-
-    // Creamos el bitmap de bloques
-    // Mostramos el tamaño del bitmap
-    // printf("El tamaño del bitmap de bloques es: %ld\n", sizeof(struct block_bitmap_fs));
-    // block_bitmap = malloc(sizeof(struct block_bitmap_fs));
-    // memset(block_bitmap, 0, sizeof(struct block_bitmap_fs));
-    // int indice1 = free_block();
-    // write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
-    // free(block_bitmap);
-    superblock = (struct superblock_fs *) mmap(NULL, sizeof(struct superblock_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    block_bitmap = (struct block_bitmap_fs *) mmap(NULL, sizeof(struct block_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->block_bitmap_first_block * BLOCK_SIZE);
-    int indice1 = free_block();
-    munmap(block_bitmap, sizeof(struct block_bitmap_fs));
-    munmap(superblock, sizeof(struct superblock_fs));
-
+    // Cogemos el tamaño y el numero de bloques es st.size / BLOCK_SIZE
+    long num_blocks = st.st_size/4096;
+    
+    // Mapeamos el fichero poco a poco
+    // Superbloque
+    superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    // Bitmap de bloques
+    block_bitmap = mmap(NULL, sizeof(struct block_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->block_bitmap_first_block * BLOCK_SIZE);
+    // Bitmap de inodos
+    inode_bitmap = mmap(NULL, sizeof(struct inode_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->inode_bitmap_first_block * BLOCK_SIZE);
+    // Mapeamos el primer inodo
+    struct inode_fs *inode = mmap(NULL, sizeof(struct inode_fs) * NUM_INODES, PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->first_inode_block * BLOCK_SIZE);
+    // Mapeamos los bloques de datos
+    unsigned char *data_block = mmap(NULL, sizeof(char) * BLOCK_SIZE * (NUM_BLOCKS - superblock->first_data_block), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->first_data_block * BLOCK_SIZE);
+    create();
+    msync(superblock,BLOCK_SIZE,MS_SYNC);
     // Cerramos el fichero
     close(fd);
-
     return 0;
 }
