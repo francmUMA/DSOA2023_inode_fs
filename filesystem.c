@@ -43,7 +43,7 @@ int main()
     printf("\n----------------------------------------------------------------------------------\n");
     print_directory(*root);
     printf("\n----------------------------------------------------------------------------------\n");
-    unlink("test2.txt", "/home/usuario/Desktop");
+    unlink_fs("test2.txt", "/home/usuario/Desktop");
     print_directory(*root);
     printf("\n----------------------------------------------------------------------------------\n");
     rmdir("/home/usuario/Desktop");

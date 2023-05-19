@@ -54,6 +54,7 @@ struct inode_fs
     long inode_bitmap_first_block;
     long block_size;
     long inode_size;
+    char modified;
  };
 
 // BITMAP DE BLOQUES
@@ -70,6 +71,8 @@ struct inode_bitmap_fs
 
 struct inode_bitmap_fs *inode_bitmap;
 struct block_bitmap_fs *block_bitmap;
+struct superblock_fs *superblock;
+int fd;
 struct inode_fs *root;
 
 /******************************************************************************************
@@ -108,5 +111,8 @@ void insert(char *, struct inode_fs *, struct inode_fs *);
 struct inode_fs *search_in_directory(char *, struct inode_fs);
 struct inode_fs *search(char *);
 struct inode_fs *search_directory(char *);
+
+// superblock.c
+void create();
 
 #endif

@@ -32,7 +32,17 @@ int free_inode(){
     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
         bit--;
     }
+
     (*inode_bitmap).bitmap[byte] |= (1 << bit);
+    superblock->inodes_count++;
+    superblock->free_inodes_count--;
+    lseek(fd, 0, SEEK_SET);
+    write(fd, superblock, sizeof(struct superblock_fs));
+
+    // Actualizamos el bitmap de inodos
+    lseek(fd, superblock->inode_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
+    write(fd, inode_bitmap, sizeof(struct inode_bitmap_fs));
+
     return (byte * 8) + (8 - bit);
 }
 
@@ -41,6 +51,15 @@ void remove_inode_bitmap(int inode){
     int byte = inode / 8;
     int bit = 7 - (inode % 8);
     (*inode_bitmap).bitmap[byte] &= ~(1 << bit);
+
+    superblock->inodes_count--;
+    superblock->free_inodes_count++;
+    lseek(fd, 0, SEEK_SET);
+    write(fd, superblock, sizeof(struct superblock_fs));
+
+    // Actualizamos el bitmap de inodos
+    lseek(fd, superblock->inode_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
+    write(fd, inode_bitmap, sizeof(struct inode_bitmap_fs));
 }
 
 long free_block(){
@@ -60,6 +79,16 @@ long free_block(){
         bit--;
     }
     (*block_bitmap).bitmap[byte] |= (1 << bit);
+
+    superblock->blocks_count++;
+    superblock->free_blocks_count--;
+    lseek(fd, 0, SEEK_SET);
+    write(fd, superblock, sizeof(struct superblock_fs));
+    
+    // Actualizamos el bitmap de bloques
+    lseek(fd, superblock->block_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
+    write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
+
     return (long) (byte * 8) + (8 - bit);
 }
 
@@ -68,4 +97,13 @@ void remove_block_bitmap(long block){
     int byte = block / 8;
     int bit = 7 - (block % 8);
     (*block_bitmap).bitmap[byte] &= ~(1 << bit);
+
+    superblock->blocks_count--;
+    superblock->free_blocks_count++;
+    lseek(fd, 0, SEEK_SET);
+    write(fd, superblock, sizeof(struct superblock_fs));
+
+    // Actualizamos el bitmap de bloques
+    lseek(fd, superblock->block_bitmap_first_block * BLOCK_SIZE, SEEK_SET);
+    write(fd, block_bitmap, sizeof(struct block_bitmap_fs));
 }

@@ -21,6 +21,14 @@ struct inode_fs *create_inode(char type, char *name){
     new_inode -> i_links = 0;
     new_inode -> i_tam = 0;
     new_inode -> i_num = free_inode();
+
+    // Miramos en que bloque guardamos el inodo
+    int pos_block = sizeof(struct inode_fs) * new_inode->i_num / 4096;
+    int pos_inode = new_inode->i_num - (pos_block - 1) * 32;
+
+    lseek(fd,(superblock->first_inode_block + pos_block) * 4096 + pos_inode * sizeof(struct inode_fs),SEEK_SET);
+    write(fd, new_inode, sizeof(struct inode_fs));
+
     return new_inode;
 }
 
