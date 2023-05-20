@@ -2,7 +2,6 @@
 
 void create()
 {
-   superblock = malloc(sizeof(struct superblock_fs));
    superblock->block_size = BLOCK_SIZE;
    superblock->blocks_count = 0;
    superblock->inode_bitmap_first_block = 1;

@@ -14,6 +14,7 @@
         "array": "c",
         "unordered_set": "c",
         "iterator": "c",
-        "string_view": "c"
+        "string_view": "c",
+        "mman.h": "c"
     }
 }
