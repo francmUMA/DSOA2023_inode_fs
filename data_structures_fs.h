@@ -7,11 +7,7 @@
 
 #define N_DIRECTOS 10
 #define N_SIMPLES 1
-#define N_DOBLES 1
-#define N_TRIPLES 1
 
-#define NUM_BLOCKS 1048576
-#define NUM_INODES 1000
 #define BLOCK_SIZE 4096
 
 #include <stdio.h>
@@ -21,6 +17,10 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+long num_blocks;
+long num_inodes;
+long reserved_blocks;
 
 // Directorios
 struct directory_entry
@@ -60,20 +60,26 @@ struct inode_fs
 // BITMAP DE BLOQUES
 struct block_bitmap_fs
 {
-    uint8_t bitmap[NUM_BLOCKS / 8];
+    uint8_t *bitmap;
 };
 
 // BITMAP DE INODOS
 struct inode_bitmap_fs
 {
-    uint8_t bitmap[NUM_INODES / 8];
+    uint8_t *bitmap;
 };
 
-struct inode_bitmap_fs *inode_bitmap;
-struct block_bitmap_fs *block_bitmap;
-struct superblock_fs *superblock;
-int fd;
-struct inode_fs *root;
+// Estructura filesystem
+typedef struct{
+    struct superblock_fs *superblock;
+    struct inode_bitmap_fs *inode_bitmap;
+    struct block_bitmap_fs *block_bitmap;
+    struct inode_fs *inode;
+    unsigned char *data_block;
+    int fd;
+} filesystem_t;
+
+filesystem_t *private_data;
 
 /******************************************************************************************
  *                                   FUNCTIONS                                             *
@@ -112,7 +118,7 @@ struct inode_fs *search_in_directory(char *, struct inode_fs);
 struct inode_fs *search(char *);
 struct inode_fs *search_directory(char *);
 
-// superblock.c
-void create();
+// init.c
+void init_superblock();
 
 #endif

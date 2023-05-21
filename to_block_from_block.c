@@ -1,5 +1,5 @@
 #include "data_structures_fs.h"
-#include "superblock.c"
+#include "init.c"
 // #include "inode.c"
 #include "bitmap.c"
 #include <stdio.h>
@@ -13,17 +13,13 @@
 
 int main()
 {   
-    // Me creo un inodo nuevo y lo inserto en mi estructura de datos
-    struct inode_fs *new_inode = malloc(sizeof(struct inode_fs));
-    new_inode->i_num = 1;
-    new_inode->i_type = 'f';
-    new_inode->i_tam = 0;
-    new_inode->i_permission = 0777;
-    new_inode->i_links = 1;
-    // Abrir un fichero binario donde vamos a mapear toda la informacion
-    fd = open("filesystem.img", O_RDWR, 0666);
+    // Inicializamos el sistema de ficheros
+    private_data = malloc(sizeof(filesystem_t));
 
-    if (fd == -1)
+    // Abrir el fichero con el contenido del filesystem
+    private_data -> fd = open("filesystem.img", O_RDWR, 0666);
+
+    if (private_data -> fd == -1)
     {
         printf("Error al abrir el fichero\n");
         return -1;
@@ -33,37 +29,79 @@ int main()
     struct stat st;
 
     // Si fstat es -1, hay un error
-    if (fstat(fd, &st))
+    if (fstat(private_data -> fd, &st))
     {
         printf("Error al obtener los datos del fichero\n");
         return -1;
     }
     
-    // Mapeamos el fichero poco a poco
-    // Superbloque
-    superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    // Inicializamos la informacion privada del sistema de ficheros
+    num_blocks = st.st_size / BLOCK_SIZE;
+    num_inodes = (num_blocks / 4) / sizeof(struct inode_fs);
+    reserved_blocks = 1 + (num_inodes * sizeof(struct inode_fs)) + 
+                        ((num_inodes / 8) / BLOCK_SIZE + 1) + (((num_blocks - ((num_inodes / 8) / BLOCK_SIZE + 1) - 
+                        (num_inodes * sizeof(struct inode_fs)) - 1) / 8) / BLOCK_SIZE + 1); 
+
+    // Mapeamos el superbloque
+    private_data -> superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, private_data -> fd, 0);
 
     // Si no se mapea bien, hay un error
-    if(superblock == MAP_FAILED)
+    if(private_data -> superblock == MAP_FAILED)
     {
         printf("Error al mapear el superbloque\n");
         return EXIT_FAILURE;
     }
+    init_superblock(private_data -> superblock);
 
-    // create();
+    // Mapeamos el bitmap de bloques
+    private_data -> block_bitmap = mmap(NULL, sizeof(struct block_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, private_data -> fd, private_data -> superblock -> block_bitmap_first_block * BLOCK_SIZE);
 
-    // Bitmap de bloques
-    // block_bitmap = mmap(NULL, sizeof(struct block_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->block_bitmap_first_block * BLOCK_SIZE);
-    // Bitmap de inodos
-    // inode_bitmap = mmap(NULL, sizeof(struct inode_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->inode_bitmap_first_block * BLOCK_SIZE);
-    // int i = free_inode();
-    // inode_bitmap->bitmap[i] = new_inode;
+    // Si no se mapea bien, hay un error
+    if(private_data -> block_bitmap == MAP_FAILED)
+    {
+        printf("Error al mapear el bitmap de bloques\n");
+        return EXIT_FAILURE;
+    }
+
+    // Mapeamos el bitmap de inodos
+    private_data -> inode_bitmap = mmap(NULL, sizeof(struct inode_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, private_data -> fd, private_data -> superblock -> inode_bitmap_first_block * BLOCK_SIZE);
+
+    // Si no se mapea bien, hay un error
+    if(private_data -> inode_bitmap == MAP_FAILED)
+    {
+        printf("Error al mapear el bitmap de inodos\n");
+        return EXIT_FAILURE;
+    }
 
     // Mapeamos el primer inodo
-    struct inode_fs *inode = mmap(NULL, sizeof(struct inode_fs) * NUM_INODES, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (superblock->first_inode_block) * BLOCK_SIZE);
-    // Mapeamos los bloques de datos
-    // unsigned char *data_block = mmap(NULL, sizeof(char) * BLOCK_SIZE * (NUM_BLOCKS - superblock->first_data_block), PROT_READ | PROT_WRITE, MAP_SHARED, fd, superblock->first_data_block * BLOCK_SIZE);
+    private_data -> inode = mmap(NULL, sizeof(struct inode_fs), PROT_READ | PROT_WRITE, MAP_SHARED, private_data -> fd, private_data -> superblock -> first_inode_block * BLOCK_SIZE);
+
+    // Si no se mapea bien, hay un error
+    if(private_data -> inode == MAP_FAILED)
+    {
+        printf("Error al mapear el primer inodo\n");
+        return EXIT_FAILURE;
+    }
+
+    // Mapeamos el primer bloque de datos
+    private_data -> data_block = mmap(NULL, 
+                                      sizeof(char) * BLOCK_SIZE * (num_blocks - reserved_blocks), 
+                                      PROT_READ | PROT_WRITE, MAP_SHARED, 
+                                      private_data -> fd, 
+                                      private_data -> superblock -> first_data_block * BLOCK_SIZE);
     
+    // Si no se mapea bien, hay un error
+    if(private_data -> data_block == MAP_FAILED)
+    {
+        printf("Error al mapear el primer bloque de datos\n");
+        return EXIT_FAILURE;
+    }
+
+    // Cerramos el fichero
+    close(private_data -> fd);
+
+
+
     // Sincronizamos los cambios
     // Superbloque
     // if((msync(superblock,sizeof(struct superblock_fs),MS_SYNC)) < 0)
@@ -84,7 +122,5 @@ int main()
     //     return EXIT_FAILURE;
     // }
 
-    // Cerramos el fichero
-    close(fd);
     return 0;
 }
