@@ -20,7 +20,7 @@ int free_inode(){
     int byte = 0; 
 
     //Encontramos el primer byte que no es 0xFF
-    while(byte < num_inodes/8 && (private_data -> inode_bitmap -> bitmap[byte] == 0xFF)){
+    while(byte < num_inodes/8 && (private_data -> inode_bitmap[byte] == 0xFF)){
         byte++;
     }
 
@@ -28,23 +28,24 @@ int free_inode(){
     int bit = 7;
 
     //Creamos un auxiliar por eficiencia
-    unsigned char aux = private_data -> inode_bitmap -> bitmap[byte];
+    unsigned char aux = private_data -> inode_bitmap[byte];
     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
         bit--;
     }
+    private_data -> inode_bitmap[byte] |= (1 << bit);
 
-    private_data -> inode_bitmap -> bitmap[byte] |= (1 << bit);
+    private_data -> inode_bitmap[byte] |= (1 << bit);
     private_data -> superblock->inodes_count++;
     private_data -> superblock->free_inodes_count--;
 
-    return (byte * 8) + (8 - bit);
+    return (byte * 8) + (8 - bit) - 1;
 }
 
 //Limpiar un inodo del bitmap de inodos
 void remove_inode_bitmap(int inode){
     int byte = inode / 8;
     int bit = 7 - (inode % 8);
-    private_data -> inode_bitmap -> bitmap[byte] &= ~(1 << bit);
+    private_data -> inode_bitmap[byte] &= ~(1 << bit);
 
     private_data -> superblock -> inodes_count--;
     private_data -> superblock -> free_inodes_count++;
@@ -54,36 +55,31 @@ long free_block(){
     int byte = 0; 
 
     //Encontramos el primer byte que no es 0xFF
-    while(byte < (num_blocks - reserved_blocks)/8 && (private_data->block_bitmap->bitmap != NULL) && (private_data -> block_bitmap -> bitmap[byte]) == 0xFF){
+    while(byte < num_blocks/8 && (private_data -> block_bitmap[byte]) == 0xFF){
         byte++;
-    }
-
-    if(private_data->block_bitmap->bitmap == NULL){
-        private_data->block_bitmap->bitmap = (uint8_t *) malloc(BLOCK_SIZE);
-        memset(private_data->block_bitmap->bitmap, 0, BLOCK_SIZE);
     }
 
     //Ahora buscamos el primer bit que es 0
     int bit = 7;
 
     //Creamos un auxiliar por eficiencia
-    unsigned char aux = private_data -> block_bitmap -> bitmap[byte];
+    unsigned char aux = private_data -> block_bitmap[byte];
     while(bit >= 0 && (((aux >> bit) & 1) != 0)){                   
         bit--;
     }
-    private_data -> block_bitmap -> bitmap[byte] |= (1 << bit);
-
+    private_data -> block_bitmap[byte] |= (1 << bit);
+    
     private_data -> superblock -> blocks_count++;
     private_data -> superblock -> free_blocks_count--;     
 
-    return (long) ((byte * 8) + (8 - bit) + (reserved_blocks - 1));
+    return (long) ((byte * 8) + (8 - bit)) - 1;
 }
 
 //Limpiar un inodo del bitmap de inodos
 void remove_block_bitmap(long block){
     int byte = block / 8;
     int bit = 7 - (block % 8);
-    private_data -> block_bitmap -> bitmap[byte] &= ~(1 << bit);
+    private_data -> block_bitmap[byte] &= ~(1 << bit);
 
     private_data -> superblock -> blocks_count--;
     private_data -> superblock -> free_blocks_count++;

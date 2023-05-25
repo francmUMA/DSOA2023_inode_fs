@@ -21,6 +21,9 @@
 long num_blocks;
 long num_inodes;
 long reserved_blocks;
+long blocks_for_inodes;
+long blocks_for_inode_bitmap;
+long blocks_for_block_bitmap;
 
 // Directorios
 struct directory_entry
@@ -57,23 +60,11 @@ struct inode_fs
     char modified;
  };
 
-// BITMAP DE BLOQUES
-struct block_bitmap_fs
-{
-    uint8_t *bitmap;
-};
-
-// BITMAP DE INODOS
-struct inode_bitmap_fs
-{
-    uint8_t *bitmap;
-};
-
 // Estructura filesystem
 typedef struct{
     struct superblock_fs *superblock;
-    struct inode_bitmap_fs *inode_bitmap;
-    struct block_bitmap_fs *block_bitmap;
+    uint8_t *inode_bitmap;
+    uint8_t *block_bitmap;
     struct inode_fs *inode;
     unsigned char *data_block;
     int fd;
