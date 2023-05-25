@@ -63,6 +63,11 @@ int main()
         return EXIT_FAILURE;
     }
 
+    // Ocupamos un bloque
+    int i = free_block();
+    // Muestro el bloque ocupado
+    printf("Bloque ocupado: %d\n", i);
+
     // Mapeamos el bitmap de inodos
     private_data -> inode_bitmap = mmap(NULL, sizeof(struct inode_bitmap_fs), PROT_READ | PROT_WRITE, MAP_SHARED, private_data -> fd, private_data -> superblock -> inode_bitmap_first_block * BLOCK_SIZE);
 
