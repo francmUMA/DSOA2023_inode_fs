@@ -66,7 +66,7 @@ typedef struct{
     uint8_t *inode_bitmap;
     uint8_t *block_bitmap;
     struct inode_fs *inode;
-    unsigned char *data_block;
+    uint8_t *block;
     int fd;
 } filesystem_t;
 

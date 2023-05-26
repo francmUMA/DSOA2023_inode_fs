@@ -52,7 +52,8 @@ int main()
         printf("Error al mapear el superbloque\n");
         return EXIT_FAILURE;
     }
-    //init_superblock(private_data -> superblock);
+    
+    init_superblock(private_data -> superblock);
 
     // Mapeamos el bitmap de bloques
     private_data -> block_bitmap = mmap(NULL, blocks_for_block_bitmap * BLOCK_SIZE, 
@@ -91,14 +92,14 @@ int main()
     }
 
     // Mapeamos el primer bloque de datos
-    private_data -> data_block = mmap(NULL, 
+    private_data -> block = mmap(NULL, 
                                       st.st_size, 
                                       PROT_READ | PROT_WRITE, MAP_SHARED, 
                                       private_data -> fd, 
                                       0);
     
     // Si no se mapea bien, hay un error
-    if(private_data -> data_block == MAP_FAILED)
+    if(private_data -> block == MAP_FAILED)
     {
         printf("Error al mapear el primer bloque de datos\n");
         return EXIT_FAILURE;
@@ -108,7 +109,14 @@ int main()
     close(private_data -> fd);
 
     init_block_bitmap();
+    int i = free_block();
 
+    struct directory_entry *entry_aux = private_data -> block[i*BLOCK_SIZE]; // [i*BLOCK_SIZE + 0]
+    strcpy(entry_aux -> name, "Francisco maricon");
+    // memcpy(private_data -> block + i * BLOCK_SIZE, entry_aux, sizeof(struct directory_entry));
+    struct  directory_entry *entry_aux2 = private_data -> block[i*BLOCK_SIZE + sizeof(struct directory_entry)];
+    // strcpy(entry_aux2 -> name, "Francisco maricon2");
+    // memcpy(private_data -> block + i * BLOCK_SIZE + sizeof(struct directory_entry), entry_aux, sizeof(struct directory_entry));
 
     return 0;
 }
