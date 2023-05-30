@@ -1,17 +1,14 @@
 #include "data_structures_fs.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 // Tengo que modificar nuestra estructura de árbol de búsqueda
 void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node) // Versión 1 (Como si solo tuvieramos directos)
 {
     int i = 0, end = 0, offset;
-    struct directory_entry *entry = malloc(sizeof(struct directory_entry));
+    struct directory_entry *entry = private_data -> block[directory_dst->i_directos[0]];
     while(i < N_DIRECTOS && directory_dst->i_directos[i] != NULL && !end){
         // Vamos a buscar el primer hueco libre en el bloque
         // Recorremos el bloque
-        memcpy(entry, blocks[directory_dst->i_directos[i]], sizeof(struct directory_entry));
+        entry[0] = blocks[directory_dst->i_directos[i]];
         for(int j = 1; j < 32 && entry -> inode != NULL; j++){
             //Traemos la entrada de directorio
             offset = sizeof(struct directory_entry)*j;

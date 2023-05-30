@@ -42,7 +42,7 @@ int free_inode(){
 }
 
 //Limpiar un inodo del bitmap de inodos
-void remove_inode_bitmap(int inode){
+void remove_inode_bitmap(long inode){
     int byte = inode / 8;
     int bit = 7 - (inode % 8);
     private_data -> inode_bitmap[byte] &= ~(1 << bit);

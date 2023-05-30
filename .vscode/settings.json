@@ -15,6 +15,9 @@
         "unordered_set": "c",
         "iterator": "c",
         "string_view": "c",
-        "mman.h": "c"
+        "mman.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
     }
 }

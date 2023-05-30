@@ -35,18 +35,19 @@ struct directory_entry
 // Inodo
 struct inode_fs
 {
-    int i_num;
+    long i_num;
     char i_type;
     int i_tam;
     int i_permission;
     int i_links;
     long i_directos[N_DIRECTOS];
     long i_simple_ind[N_SIMPLES];
-    uint8_t i_relleno [16];
+    uint8_t i_relleno [12];
 };
 
 //SUPERBLOQUE
  struct superblock_fs {
+    int MAGIC_NUM;
     long inodes_count;
     long blocks_count;
     long free_blocks_count;
@@ -57,8 +58,9 @@ struct inode_fs
     long inode_bitmap_first_block;
     long block_size;
     long inode_size;
-    char modified;
  };
+
+typedef uint8_t block_t [BLOCK_SIZE];
 
 // Estructura filesystem
 typedef struct{
@@ -66,7 +68,7 @@ typedef struct{
     uint8_t *inode_bitmap;
     uint8_t *block_bitmap;
     struct inode_fs *inode;
-    uint8_t *block;
+    block_t *block;
     int fd;
 } filesystem_t;
 
@@ -78,7 +80,7 @@ filesystem_t *private_data;
 
 // bitmap.c
 int free_inode();
-void remove_inode_bitmap(int);
+void remove_inode_bitmap(long);
 long free_block();
 void remove_block_bitmap(long);
 
@@ -111,5 +113,6 @@ struct inode_fs *search_directory(char *);
 
 // init.c
 void init_superblock();
+void init_block_bitmap();
 
 #endif
