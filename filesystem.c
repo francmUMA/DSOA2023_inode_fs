@@ -104,4 +104,9 @@ int main()
     // Cerramos el fichero
     close(private_data -> fd);
     init_block_bitmap();
+
+    struct inode_fs *root = create_root();
+    print_directory(*root);
+    
+    printf("Sistema de ficheros inicializado correctamente\n");
 }

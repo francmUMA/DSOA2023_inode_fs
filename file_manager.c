@@ -83,20 +83,19 @@ void touch(char *path, char type){
 
 void print_directory(struct inode_fs directory){           //solo se usan los punteros directos (version 1)
     //Bring the entries of the directory
-    int i = 0, offset = 0;
-    struct directory_entry *entry = malloc(sizeof(struct directory_entry));
+    int i = 0;
+    struct directory_entry *entry;
     while(i < N_DIRECTOS && directory.i_directos[i] != NULL){
         // Recorremos el bloque
-        memcpy(entry, blocks[directory.i_directos[i]]+offset, sizeof(struct directory_entry));
-        for(int j = 1; j < 32 && entry->inode != NULL; j++){ // j es offset
+        entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
+        int j;
+        for(j = 0; j < 128 && entry[j]->inode != NULL; j++){ // j es offset
             // Print the entry
-            offset = sizeof(struct directory_entry)*j;
-            printf("%s ", entry->name);
-            if((*(*entry).inode).i_type == 'd' && strcmp((*entry).name, ".") != 0 && strcmp((*entry).name, "..") != 0){
+            printf("%s ", entry[j]->name);
+            if(entry[j].inode->i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0){
                 printf("\n -> "); 
-                print_directory(*(*entry).inode);
+                print_directory(entry[j].inode);
             }
-            memcpy(entry, blocks[directory.i_directos[i]]+offset, sizeof(struct directory_entry));
         }
         printf("\n");
         i++;    
@@ -143,13 +142,13 @@ void rmdir_fs(char* path)
     }
 
     int i = 0;
-    struct directory_entry *entry = malloc(sizeof(struct directory_entry));
-    memcpy(entry, blocks[(*current_dir).i_directos[0]], sizeof(struct directory_entry));
+    struct directory_entry *entry;
     // Comprobamos que el directorio está vacío
-    while(entry->inode != NULL)
+    entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
+    while(entry[i]->inode != NULL)
     {
         i++;
-        memcpy(entry, blocks[(*current_dir).i_directos[0]] + sizeof(struct directory_entry) * i, sizeof(struct directory_entry));
+        entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
     }
 
     if(i > 2)
@@ -158,8 +157,7 @@ void rmdir_fs(char* path)
         return;
     }else{
         // Eliminamos las entradas . y ..
-        memcpy(entry, blocks[(*current_dir).i_directos[0]] + 32, sizeof(struct directory_entry));
-        remove_entry(current_dir -> i_name, (*entry).inode);
+        remove_entry(current_dir -> i_name, entry[1]->inode); // Casi ponemos una barbaridad profesor
         remove_entry("..", current_dir);
         remove_entry(".", current_dir);
         // Eliminamos el directorio
@@ -235,34 +233,19 @@ char *read_file(char *path){
     }
 
     // Mostramos el contenido del inodo
-    char *buffer = malloc(sizeof(char) * 1024);
+    char *buffer = malloc(sizeof(char) * 4096);
     char *res = malloc(file -> i_tam);
 
     int counter = 0;
     for(int i = 0; i < N_DIRECTOS && counter < file -> i_tam; i++){
-        memcpy(buffer, blocks[file -> i_directos[i]], sizeof(char) * 1024);
-        for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
+        strcpy(buffer,private_data -> block[file -> i_directos[i]]);
+        for(int j = 0; j < 4096 && counter < file -> i_tam; j++){
             res[counter] = buffer[j];
             counter++;
         }
-        memset(buffer, 0, sizeof(char) * 1024);
-    }
-    if(file->i_simple_ind[0] == NULL){
-        free(buffer);
-        return res;
+        memset(buffer, 0, sizeof(char) * 4096);
     }
 
-    block_list direct_blocks_indirect = get_blocks_indirect(file -> i_simple_ind[0]);
-    
-    while(direct_blocks_indirect != NULL && direct_blocks_indirect -> block_index < NUM_BLOCKS){
-        memcpy(buffer, blocks[direct_blocks_indirect -> block_index], sizeof(char) * 1024);
-        for(int j = 0; j < 1024 && counter < file -> i_tam; j++){
-            res[counter] = buffer[j];
-            counter++;
-        }
-        memset(buffer, 0, sizeof(char) * 1024);
-        direct_blocks_indirect = direct_blocks_indirect -> next;
-    }
     free(buffer);
 
     return res;

@@ -111,7 +111,7 @@ int main()
     //init_block_bitmap();
     int i = free_block();
 
-    struct directory_entry *entry_aux = (struct directory_entry *) private_data -> block[i]; // [i*BLOCK_SIZE + 0]
+    struct directory_entry *entry_aux = (struct directory_entry *) private_data -> block[i];  
     strcpy(entry_aux[127].name, "entrada128");
     return 0;
 }

@@ -90,8 +90,8 @@ struct inode_fs *create_root();
 void remove_inode(struct inode_fs *);
 void remove_entry(char *, struct inode_fs *);
 void clean_inode(struct inode_fs *);
-//block_list get_blocks_indirect(long);
-void add_block_indirect(long, long);
+// block_list get_blocks_indirect(long);
+// void add_block_indirect(long, long);
 long create_block();
 
 // file_manager.c
