@@ -10,14 +10,16 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Recorremos el bloque
         int j;
-        while(j < 128 && entry[j] -> inode != NULL) j++;
+        while(j < 128 && entry[j].inode != NULL) j++;
         // Nos aseguramos de que nuestra entrada es null
-        if (entry[j] -> inode == NULL)
+        if (entry[j].inode == NULL)
         {
             // Guardamos nuestra entrada de bloque
-            strcpy(entry[j]->name, name);
+            strcpy(entry[j].name, name);
             n_node -> i_links += 1;
-            entry[j]->inode = n_node;
+            entry[j].inode = n_node;
+            if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0) entry[j].inode->entry = &entry[j];
+            else if (strcmp(name, ".") == 0 && n_node->i_num == 0) entry[j].inode->entry = &entry[j]; 
             end = 1;
         }
         i++;
@@ -30,14 +32,15 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
 
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Modificamos la entrada de directorio
-        strcpy(entry[0]->name, name);
+        strcpy(entry[0].name, name);
 
         // Si n_node es el mismo inodo que directory_dst, se guarda en la entry el directory_dst
         if ((*n_node).i_num == (*directory_dst).i_num){
-            entry[0]->inode = directory_dst;
+            entry[0].inode = directory_dst;
         } else {
-            entry[0]->inode = n_node;
+            entry[0].inode = n_node;
         }
+        entry[0].inode->entry = &entry[0];
     }
     else if (!end) {
         printf("No hay espacio en el directorio\n");
@@ -53,13 +56,13 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Recorremos el bloque
         int j;
-        for(j = 0; j < 128 && entry[j] -> inode != NULL && !end; j++){
+        for(j = 0; j < 128 && entry[j].inode != NULL && !end; j++){
 
             // Si es la entrada que buscamos, la eliminamos
-            if (strcmp(entry[j]->name, name) == 0){
+            if (strcmp(entry[j].name, name) == 0){
 
                 //Se elimina la entrada de directorio
-                entry[j] = NULL;
+                memset(&entry[j], 0, sizeof(struct directory_entry));
                 end = 1;
             }  
         }
@@ -82,12 +85,12 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
 
     for (int i = 0; i < N_DIRECTOS && directory.i_directos[i] != NULL & !end; i++){
         // Recorremos el bloque
-        entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
+        entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
         int j;
-        for (j = 0; j < 128 && entry[j] -> inode != NULL && !end; j++){
-            if (strcmp(entry[j]->name, target) == 0){
+        for (j = 0; j < 128 && entry[j].inode != NULL && !end; j++){
+            if (strcmp(entry[j].name, target) == 0){
                 // Si es el inodo que buscamos, lo devolvemos
-                res = entry[j]->inode;
+                res = entry[j].inode;
                 end = 1;
             }
         }
@@ -102,7 +105,7 @@ struct inode_fs *search(char *path){
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     
-    current_inode = search_in_directory(token, *root);
+    current_inode = search_in_directory(token, private_data -> inode[0]);
     if (current_inode != NULL) {
         while(token != NULL && current_inode->i_type == 'd'){
             strcat(cmp_path, "/");
@@ -113,14 +116,15 @@ struct inode_fs *search(char *path){
             }
             
             // Concatenamos el path
-            strcat(cmp_path, current_inode->i_name);
+            if (strcmp(current_inode->entry->name, "..") != 0) strcat(cmp_path, current_inode->entry->name);
+            else strcpy(cmp_path, "");
             token = strtok(NULL, "/");
             if (token != NULL) current_inode = search_in_directory(token, *current_inode);
         }   
         
         if (current_inode ->i_type == '-') {
             strcat(cmp_path, "/");
-            strcat(cmp_path, current_inode->i_name);
+            strcat(cmp_path, current_inode->entry->name);
         }
 
         if(strcmp(cmp_path,path) != 0){
@@ -134,13 +138,13 @@ struct inode_fs *search(char *path){
 
 struct inode_fs *search_directory(char *path){
     if (strcmp(path, ".") == 0 || strcmp(path, "/") == 0){
-        return root;
+        return &(private_data -> inode[0]);
     }
     struct inode_fs *current_dir;
     char path_aux[24];
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
-    current_dir = search_in_directory(token, *root);
+    current_dir = search_in_directory(token, private_data -> inode[0]);
 
     while(token != NULL){
         if(current_dir == NULL || current_dir->i_type != 'd') {

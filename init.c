@@ -2,7 +2,7 @@
 
 void init_superblock()
 {
-   private_data -> superblock->magic_number = 17062023;
+   private_data -> superblock->MAGIC_NUM = 17062023;
    private_data -> superblock->block_size = BLOCK_SIZE;
    private_data -> superblock->blocks_count = blocks_for_inodes + blocks_for_inode_bitmap + blocks_for_block_bitmap + 1;
    private_data -> superblock->inode_bitmap_first_block = 1;

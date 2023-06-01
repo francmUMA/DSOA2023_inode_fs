@@ -112,6 +112,18 @@ int main()
     int i = free_block();
 
     struct directory_entry *entry_aux = (struct directory_entry *) private_data -> block[i];  
-    strcpy(entry_aux[127].name, "entrada128");
+    strcpy(entry_aux[0].name, "entrada0");
+    memset(private_data ->block[i], 0, BLOCK_SIZE);
+    entry_aux = (struct directory_entry *) private_data -> block[i];
+    struct inode_fs *inode_aux = &(private_data -> inode[0]);
+    inode_aux -> i_type = 'd';
+    inode_aux -> i_permission = 0755;
+    inode_aux -> i_links = 0;
+    inode_aux -> i_tam = 0;
+    inode_aux -> i_num = 0;
+    inode_aux -> i_num = free_inode();
+
+    memset(inode_aux, 0, sizeof(struct inode_fs));
+    struct inode_fs *inode_aux2 = &(private_data -> inode[0]);
     return 0;
 }

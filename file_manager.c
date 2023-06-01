@@ -89,12 +89,12 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
         // Recorremos el bloque
         entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
         int j;
-        for(j = 0; j < 128 && entry[j]->inode != NULL; j++){ // j es offset
+        for(j = 0; j < 128 && entry[j].inode != NULL; j++){ // j es offset
             // Print the entry
-            printf("%s ", entry[j]->name);
+            printf("%s ", entry[j].name);
             if(entry[j].inode->i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0){
                 printf("\n -> "); 
-                print_directory(entry[j].inode);
+                print_directory(*(entry[j].inode));
             }
         }
         printf("\n");
@@ -145,7 +145,7 @@ void rmdir_fs(char* path)
     struct directory_entry *entry;
     // Comprobamos que el directorio está vacío
     entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
-    while(entry[i]->inode != NULL)
+    while(entry[i].inode != NULL)
     {
         i++;
         entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
@@ -157,7 +157,7 @@ void rmdir_fs(char* path)
         return;
     }else{
         // Eliminamos las entradas . y ..
-        remove_entry(current_dir -> i_name, entry[1]->inode); // Casi ponemos una barbaridad profesor
+        remove_entry(current_dir->entry->name, entry[1].inode); // Casi ponemos una barbaridad profesor
         remove_entry("..", current_dir);
         remove_entry(".", current_dir);
         // Eliminamos el directorio
@@ -273,7 +273,7 @@ void rename_file(char *path, char *new_name){
     }
 
     // Cambiamos el nombre
-    remove_entry(file->i_name, parent);
-    strcpy(file->i_name, new_name);
+    remove_entry(file->entry->name, parent);
+    strcpy(file->entry->name, new_name);
     insert(new_name, parent, file);
 }

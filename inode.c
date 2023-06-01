@@ -8,8 +8,7 @@
 
 struct inode_fs *create_inode(char type, char *name){
     long inode_num = free_inode();
-    struct inode_fs *new_inode = private_data -> inode[inode_num];
-    strcpy(new_inode -> i_name, name);
+    struct inode_fs *new_inode = &(private_data -> inode[inode_num]);
     new_inode -> i_type = type;
     if (type == 'd'){
         new_inode -> i_permission = 0755;
@@ -40,7 +39,7 @@ void remove_inode(struct inode_fs *inode){
     clean_inode(inode);
 
     //Liberamos el inodo
-    inode = NULL;
+    memset(inode, 0, sizeof(struct inode_fs));
 }
 
 // Añadir carácter
@@ -49,7 +48,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
     int i = 0, end = 0;
     char *buffer = malloc(sizeof(char)*4096);
     while(i < N_DIRECTOS && file->i_directos[i] != NULL && !end){
-        strcpy(buffer, private_data -> block[file -> i_directos[i]])// Nos traemos nuestro bloque en la pos file->i_directos[i]
+        strcpy(buffer, private_data -> block[file -> i_directos[i]]); // Nos traemos nuestro bloque en la pos file->i_directos[i]
         if(strlen(buffer) < 4096){
             buffer[strlen(buffer)] = contenido;
             strcpy(private_data -> block[file->i_directos[i]], buffer); // Guardamos el bloque modificado
@@ -73,7 +72,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
 void clean_inode(struct inode_fs *file) {
     // Limpiamos primero los directos
     for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
-        private_data -> block[file -> i_directos[i]] = 0;
+        memset(private_data -> block[file -> i_directos[i]], 0 , BLOCK_SIZE);
         file -> i_directos[i] = NULL;
     }
     file -> i_tam = 0;
@@ -154,10 +153,10 @@ long create_block() {
 
 int remove_block(long index)
 {
-    if(index < 0 || index > NUM_BLOCKS){
+    if(index < 0 || index > num_blocks){
         return -1;
     }
-    private_data -> block[index] = 0;
+    memset(private_data -> block[index], 0, BLOCK_SIZE);
     remove_block_bitmap(index);
     return 0;
 }
