@@ -18,6 +18,7 @@
         "mman.h": "c",
         "stdlib.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "fuse.h": "c"
     }
 }
