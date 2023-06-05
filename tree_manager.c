@@ -77,7 +77,7 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
 // Función para buscar un inodo en un directorio concreto
 struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     //Creamos el inodo que vamos a devolver
-    struct inode_fs *res;
+    struct inode_fs *res = NULL;
 
     //Recorremos el directorio
     int end = 0;
@@ -106,31 +106,32 @@ struct inode_fs *search(char *path){
     char *token = strtok(path_aux, "/");
     
     current_inode = search_in_directory(token, private_data -> inode[0]);
-    if (current_inode != NULL) {
-        while(token != NULL && current_inode->i_type == 'd'){
-            strcat(cmp_path, "/");
-            // Buscamos el inodo en el directorio actual
-            if(current_inode == NULL) {
-                printf("No se ha encontrado el directorio\n");
-                return NULL;
-            }
-            
-            // Concatenamos el path
-            if (strcmp(current_inode->entry->name, "..") != 0) strcat(cmp_path, current_inode->entry->name);
-            else strcpy(cmp_path, "");
-            token = strtok(NULL, "/");
-            if (token != NULL) current_inode = search_in_directory(token, *current_inode);
-        }   
-        
-        if (current_inode ->i_type == '-') {
-            strcat(cmp_path, "/");
-            strcat(cmp_path, current_inode->entry->name);
-        }
-
-        if(strcmp(cmp_path,path) != 0){
-            printf("No existe el fichero\n");
+    while(current_inode != NULL && token != NULL && current_inode->i_type == 'd'){
+        strcat(cmp_path, "/");
+        // Buscamos el inodo en el directorio actual
+        if(current_inode == NULL) {
+            printf("No se ha encontrado el directorio\n");
             return NULL;
         }
+        
+        // Concatenamos el path
+        if (strcmp(current_inode->entry->name, "..") != 0) strcat(cmp_path, current_inode->entry->name);
+        else strcpy(cmp_path, "");
+        token = strtok(NULL, "/");
+        if (token != NULL) current_inode = search_in_directory(token, *current_inode);
+    }   
+    
+    // Si no hemos encontrado el inodo, devolvemos NULL
+    if (current_inode == NULL) return NULL;
+
+    if (current_inode ->i_type == '-') {
+        strcat(cmp_path, "/");
+        strcat(cmp_path, current_inode->entry->name);
+    }
+
+    if(strcmp(cmp_path,path) != 0){
+        printf("No existe el fichero\n");
+        return NULL;
     }
 
     return current_inode;

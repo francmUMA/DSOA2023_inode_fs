@@ -99,7 +99,7 @@ long create_block();
 char *get_directory(char *);
 void touch(char *, char);
 void print_directory(struct inode_fs);
-void unlink_fs(char *, char *);
+void unlink_fs(char *);
 void rmdir_fs(char *);
 int append(char *, char *);
 int overwrite(char *, char *);

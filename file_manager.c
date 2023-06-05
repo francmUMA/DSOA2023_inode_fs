@@ -103,16 +103,16 @@ void print_directory(struct inode_fs directory){           //solo se usan los pu
 }
 
 
-void unlink_fs(char *name, char *path_directory){
+void unlink_fs(char *path){
     // Search for the directory
-    struct inode_fs *dir = search_directory(path_directory);
+    struct inode_fs *dir = search_directory(get_path_directory(path));
     if(dir == NULL){
         printf("Directory not found\n");
         return;
     }
 
     // Search for the file
-    struct inode_fs *file = search_in_directory(name, *dir);
+    struct inode_fs *file = search(path);
     if(file == NULL){
         printf("File not found\n");
         return;
@@ -120,10 +120,11 @@ void unlink_fs(char *name, char *path_directory){
         printf("Cannot remove a directory\n");
         return;
     }
+    
     file -> i_links -= 1;
 
     // Remove the file from the directory
-    remove_entry(name, dir);
+    remove_entry(file->entry->name, dir);
 
     // Remove the file
     if (file -> i_links == 0){
@@ -148,7 +149,6 @@ void rmdir_fs(char* path)
     while(entry[i].inode != NULL)
     {
         i++;
-        entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
     }
 
     if(i > 2)
@@ -273,7 +273,7 @@ void rename_file(char *path, char *new_name){
     }
 
     // Cambiamos el nombre
-    remove_entry(file->entry->name, parent);
+    // remove_entry(file->entry->name, parent);
     strcpy(file->entry->name, new_name);
-    insert(new_name, parent, file);
+    // insert(new_name, parent, file);
 }

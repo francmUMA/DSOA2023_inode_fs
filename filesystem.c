@@ -8,6 +8,8 @@
 #include "file_manager.c"
 #include "tree_manager.c"
 
+
+
 int main()
 {
     // Inicializamos el sistema de ficheros
@@ -111,8 +113,13 @@ int main()
     touch("/home", 'd');
     touch("/home/dso", 'd');
     touch("/home/dso/test.txt", '-');
+    // Borramos un archivo
+    unlink_fs("/home/dso/test.txt");
+    // Borramos un directorio
+    // rmdir_fs("/home/dso");
     // overwrite("/home/dso/test.txt", "Hola mundo");
-    // char* test = read_file("/home/dso/test.txt");
+    // char* test = 
+    read_file("/home/dso/test.txt");
     // printf("%s", test);
     rename_file("/home/dso/test.txt", "test2.txt");
     print_directory(private_data->inode[0]);
