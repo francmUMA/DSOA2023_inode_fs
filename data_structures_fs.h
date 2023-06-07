@@ -25,7 +25,7 @@
 struct directory_entry
 {
     char name[24];
-    struct inode_fs *inode;
+    long inode; // Cambiar a long para que sea el número de inodo
 };
 
 // Inodo

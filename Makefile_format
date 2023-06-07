@@ -1,0 +1,12 @@
+fichero= filesystem.img
+
+mk_filesystem : formateador.o
+	gcc -g -o $@ $<
+	
+formateador.o : formateador.c data_structures_fs.h
+	gcc -g -c -o $@ $<
+
+edit: mk_filesystem
+	./mk_filesystem $(fichero)
+clean:
+	rm -rf filesystem.img mk_filesystem formateador.o

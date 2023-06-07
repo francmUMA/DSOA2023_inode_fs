@@ -27,7 +27,6 @@ void create_root(filesystem_t *private_data){
     struct inode_fs *root = create_inode('d', "/", private_data);
     insert(".", root, root, private_data);
     insert("..", root, root, private_data);
-    return root;
 }
 
 // Eliminación de un inodo
@@ -73,7 +72,7 @@ void clean_inode(struct inode_fs *file, filesystem_t *private_data) {
     // Limpiamos primero los directos
     for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
         memset(private_data -> block[file -> i_directos[i]], 0 , BLOCK_SIZE);
-        file -> i_directos[i] = NULL;
+        file -> i_directos[i] = (long int) NULL;
     }
     file -> i_tam = 0;
 }

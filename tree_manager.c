@@ -10,16 +10,16 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node,
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Recorremos el bloque
         int j;
-        while(j < 128 && entry[j].inode != NULL) j++;
+        while(j < 128 && &private_data->inode[entry[j].inode] != NULL) j++;
         // Nos aseguramos de que nuestra entrada es null
-        if (entry[j].inode == NULL)
+        if (&private_data->inode[entry[j].inode] == NULL)
         {
             // Guardamos nuestra entrada de bloque
             strcpy(entry[j].name, name);
             n_node -> i_links += 1;
-            entry[j].inode = n_node;
-            if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0) entry[j].inode->entry = &entry[j];
-            else if (strcmp(name, ".") == 0 && n_node->i_num == 0) entry[j].inode->entry = &entry[j]; 
+            private_data->inode[entry[j].inode] = *n_node;
+            if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0) private_data->inode[entry[j].inode].entry = &entry[j];
+            else if (strcmp(name, ".") == 0 && n_node->i_num == 0) private_data->inode[entry[j].inode].entry = &entry[j]; 
             end = 1;
         }
         i++;
@@ -36,11 +36,11 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node,
 
         // Si n_node es el mismo inodo que directory_dst, se guarda en la entry el directory_dst
         if ((*n_node).i_num == (*directory_dst).i_num){
-            entry[0].inode = directory_dst;
+            private_data->inode[entry[0].inode] = *directory_dst;
         } else {
-            entry[0].inode = n_node;
+            private_data->inode[entry[0].inode] = *n_node;
         }
-        entry[0].inode->entry = &entry[0];
+        private_data->inode[entry[0].inode].entry = &entry[0];
     }
     else if (!end) {
         printf("No hay espacio en el directorio\n");
@@ -56,7 +56,7 @@ void remove_entry(char *name, struct inode_fs *directory_dst, filesystem_t *priv
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Recorremos el bloque
         int j;
-        for(j = 0; j < 128 && entry[j].inode != NULL && !end; j++){
+        for(j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL && !end; j++){
 
             // Si es la entrada que buscamos, la eliminamos
             if (strcmp(entry[j].name, name) == 0){
@@ -83,14 +83,14 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory, fi
     int end = 0;
     struct directory_entry *entry;
 
-    for (int i = 0; i < N_DIRECTOS && directory.i_directos[i] != NULL & !end; i++){
+    for (int i = 0; i < N_DIRECTOS && &directory.i_directos[i] != NULL & !end; i++){
         // Recorremos el bloque
         entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
         int j;
-        for (j = 0; j < 128 && entry[j].inode != NULL && !end; j++){
+        for (j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL && !end; j++){
             if (strcmp(entry[j].name, target) == 0){
                 // Si es el inodo que buscamos, lo devolvemos
-                res = entry[j].inode;
+                res = &private_data->inode[entry[j].inode];
                 end = 1;
             }
         }

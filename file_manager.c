@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 
 char *get_path_directory(char* path)
@@ -89,12 +90,12 @@ void print_directory(struct inode_fs directory, filesystem_t *private_data){    
         // Recorremos el bloque
         entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
         int j;
-        for(j = 0; j < 128 && entry[j].inode != NULL; j++){ // j es offset
+        for(j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL; j++){ // j es offset
             // Print the entry
             printf("%s ", entry[j].name);
-            if(entry[j].inode->i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0){
+            if(private_data->inode[entry[j].inode].i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0){
                 printf("\n -> "); 
-                print_directory(*(entry[j].inode), private_data);
+                print_directory(private_data->inode[entry[j].inode], private_data);
             }
         }
         printf("\n");
@@ -146,7 +147,7 @@ void rmdir_fs(char* path, filesystem_t *private_data)
     struct directory_entry *entry;
     // Comprobamos que el directorio está vacío
     entry = (struct directory_entry*) private_data -> block[current_dir->i_directos[i]];
-    while(entry[i].inode != NULL)
+    while(&private_data->inode[entry[i].inode] != NULL)
     {
         i++;
     }
@@ -157,7 +158,7 @@ void rmdir_fs(char* path, filesystem_t *private_data)
         return;
     }else{
         // Eliminamos las entradas . y ..
-        remove_entry(current_dir->entry->name, entry[1].inode, private_data); // Casi ponemos una barbaridad profesor
+        remove_entry(current_dir->entry->name, &private_data->inode[entry[1].inode], private_data); // Casi ponemos una barbaridad profesor
         remove_entry("..", current_dir, private_data);
         remove_entry(".", current_dir, private_data);
         // Eliminamos el directorio
@@ -222,33 +223,32 @@ char *read_file(char *path, filesystem_t *private_data){
     struct inode_fs *file = search(path, private_data);
     if (file == NULL){
         printf("File not found\n");
-        return;
-    }
+        return NULL;
+    }else{
+            // Comprobamos que sea archivo con i_type = '-'
+        if((*file).i_type != '-')
+        {
+            printf("No se puede leer un directorio\n");
+            return NULL;
+        }else{
+            // Mostramos el contenido del inodo
+            char *buffer = malloc(sizeof(char) * 4096);
+            char *res = malloc(file -> i_tam);
 
-    // Comprobamos que sea archivo con i_type = '-'
-    if((*file).i_type != '-')
-    {
-        printf("No se puede leer un directorio\n");
-        return;
-    }
+            int counter = 0;
+            for(int i = 0; i < N_DIRECTOS && counter < file -> i_tam; i++){
+                strcpy(buffer,private_data -> block[file -> i_directos[i]]);
+                for(int j = 0; j < 4096 && counter < file -> i_tam; j++){
+                    res[counter] = buffer[j];
+                    counter++;
+                }
+                memset(buffer, 0, sizeof(char) * 4096);
+            }
 
-    // Mostramos el contenido del inodo
-    char *buffer = malloc(sizeof(char) * 4096);
-    char *res = malloc(file -> i_tam);
-
-    int counter = 0;
-    for(int i = 0; i < N_DIRECTOS && counter < file -> i_tam; i++){
-        strcpy(buffer,private_data -> block[file -> i_directos[i]]);
-        for(int j = 0; j < 4096 && counter < file -> i_tam; j++){
-            res[counter] = buffer[j];
-            counter++;
+            free(buffer);
+            return res;
         }
-        memset(buffer, 0, sizeof(char) * 4096);
     }
-
-    free(buffer);
-
-    return res;
 }
 
 void rename_file(char *path, char *new_name, filesystem_t *private_data){
