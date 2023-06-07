@@ -16,11 +16,12 @@
 
 static int getattr_fs(const char *path, struct stat *stbuf)
 {
-    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    filesystem_t *private_data = (filesystem_t *) fuse_get_context()->private_data; // Obtenemos los datos privados
     // Buscamos el inodo
     int res = 0; // Valor a devolver para mostrar que funciona correctamente
     struct inode_fs *inode = search(path, private_data);
 
+    memset(stbuf, 0, sizeof(struct stat));
     if(inode == NULL){
         res = -ENOENT;
     }else{
@@ -49,7 +50,8 @@ static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     struct inode_fs *inode = search(path,private_data);
     // Si el inodo no es directorio, devolvemos error
-    if(inode == NULL && inode->i_type != "d"){
+    // Error de conexión con el otro extremo
+    if(inode == NULL && strcmp(inode->i_type,"d") != 0){
         return -ENOENT;
     }
 
@@ -62,7 +64,7 @@ static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
         }
         i++;
     }
-
+    
 	return 0;
 }
 
@@ -233,14 +235,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    init_block_bitmap(private_data);
+    // No deja crear el root
+    create_root(private_data);
+    touch("/hola.txt","-",private_data);
     // Cerramos el fichero
     close(private_data->fd);
-    init_block_bitmap(private_data);
-
-    (void) create_root(private_data); // Otra barbaridad
-    // Joder, esto es una barbaridad
-    // Pero no se me ocurre otra forma de hacerlo
-    // Y no tengo tiempo para pensar en otra forma
 	// análisis parámetros de entrada
     return fuse_main(argc, argv, &basic_oper, private_data); // private_data
 }

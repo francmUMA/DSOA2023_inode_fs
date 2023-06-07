@@ -23,7 +23,7 @@ struct inode_fs *create_inode(char type, char *name, filesystem_t *private_data)
 }
 
 //Creación del inodo root 
-struct inode_fs *create_root(filesystem_t *private_data){
+void create_root(filesystem_t *private_data){
     struct inode_fs *root = create_inode('d', "/", private_data);
     insert(".", root, root, private_data);
     insert("..", root, root, private_data);

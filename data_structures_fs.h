@@ -93,7 +93,7 @@ void remove_block_bitmap(long, filesystem_t *);
 
 // inode.c
 struct inode_fs *create_inode(char, char *, filesystem_t *);
-struct inode_fs *create_root(filesystem_t *);
+void create_root(filesystem_t *);
 void remove_inode(struct inode_fs *, filesystem_t *);
 void clean_inode(struct inode_fs *, filesystem_t *);
 // block_list get_blocks_indirect(long);
