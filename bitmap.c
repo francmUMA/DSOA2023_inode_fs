@@ -16,11 +16,11 @@
 //Primero se busca la primera posicion que tiene un byte diferente de 0xFF, es decir, que tenga un 0.
 //Hay un total de NUM_INODES inodos, por lo que se divide entre 8 para saber el numero de bytes que hay que recorrer.
 
-int free_inode(){
+int free_inode(filesystem_t *private_data){
     int byte = 0; 
 
     //Encontramos el primer byte que no es 0xFF
-    while(byte < num_inodes/8 && (private_data -> inode_bitmap[byte] == 0xFF)){
+    while(byte < private_data->num_inodes/8 && (private_data -> inode_bitmap[byte] == 0xFF)){
         byte++;
     }
 
@@ -42,7 +42,7 @@ int free_inode(){
 }
 
 //Limpiar un inodo del bitmap de inodos
-void remove_inode_bitmap(long inode){
+void remove_inode_bitmap(long inode, filesystem_t *private_data){
     int byte = inode / 8;
     int bit = 7 - (inode % 8);
     private_data -> inode_bitmap[byte] &= ~(1 << bit);
@@ -51,11 +51,11 @@ void remove_inode_bitmap(long inode){
     private_data -> superblock -> free_inodes_count++;
 }
 
-long free_block(){
+long free_block(filesystem_t *private_data){
     int byte = 0; 
 
     //Encontramos el primer byte que no es 0xFF
-    while(byte < num_blocks/8 && (private_data -> block_bitmap[byte]) == 0xFF){
+    while(byte < private_data->num_blocks/8 && (private_data -> block_bitmap[byte]) == 0xFF){
         byte++;
     }
 
@@ -76,7 +76,7 @@ long free_block(){
 }
 
 //Limpiar un inodo del bitmap de inodos
-void remove_block_bitmap(long block){
+void remove_block_bitmap(long block, filesystem_t *private_data){
     int byte = block / 8;
     int bit = 7 - (block % 8);
     private_data -> block_bitmap[byte] &= ~(1 << bit);

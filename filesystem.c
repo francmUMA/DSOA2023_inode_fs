@@ -16,9 +16,10 @@
 
 static int getattr_fs(const char *path, struct stat *stbuf)
 {
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     // Buscamos el inodo
     int res = 0; // Valor a devolver para mostrar que funciona correctamente
-    struct inode_fs *inode = search(path);
+    struct inode_fs *inode = search(path, private_data);
 
     if(inode == NULL){
         res = -ENOENT;
@@ -45,18 +46,21 @@ static int getattr_fs(const char *path, struct stat *stbuf)
 static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
 					  off_t offset, struct fuse_file_info *fi)
 {
-    struct inode_fs *inode = search(path);
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    struct inode_fs *inode = search(path,private_data);
     // Si el inodo no es directorio, devolvemos error
     if(inode == NULL && inode->i_type != "d"){
         return -ENOENT;
     }
 
     struct directory_entry *entry;
-    for(int i = 0; i < N_DIRECTOS; i++){
+    int i = 0;
+    while(i < N_DIRECTOS && inode->i_directos[i] != NULL){
         entry = private_data->block[inode->i_directos[i]];
         for(int j = 0; j < 128 && entry[j].inode != NULL; j++){
             if(filler(buf, entry[j].name, NULL, 0) != 0) return -ENOMEM;
         }
+        i++;
     }
 
 	return 0;
@@ -66,8 +70,9 @@ static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
  * */
 static int open_fs(const char *path, struct fuse_file_info *fi)
 {
+    filesystem_t *private_data = (filesystem_t *) fuse_get_context()->private_data; // Obtenemos los datos privados
 	/* completar */
-    struct inode_fs *inode = search(path);
+    struct inode_fs *inode = search(path,private_data);
 
     if(inode == NULL)
     {
@@ -85,12 +90,13 @@ static int open_fs(const char *path, struct fuse_file_info *fi)
 static int read_fs(const char *path, char *buf, size_t size, off_t offset,
 				   struct fuse_file_info *fi)
 {
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     int res = fi->fh;
     size_t len;
 
     if(res < 0) return -ENOENT;
 
-    char *content = read_file(path);
+    char *content = read_file(path,private_data);
 	len = strlen(content);
 
 	if(offset < len){
@@ -123,7 +129,7 @@ static struct fuse_operations basic_oper = {
 int main(int argc, char *argv[])
 {
     // Inicializamos el sistema de ficheros
-    private_data = malloc(sizeof(filesystem_t));
+    filesystem_t *private_data = malloc(sizeof(filesystem_t));
 
 	if ((argc < 3) || (argv[argc - 2][0] == '-') || (argv[argc - 1][0] == '-'))
 		return -1;
@@ -159,12 +165,12 @@ int main(int argc, char *argv[])
 	private_data->st_mtime = st.st_mtime;
 
     // Inicializamos la informacion privada del sistema de ficheros
-    num_blocks = st.st_size / BLOCK_SIZE;
-    num_inodes = (num_blocks / 4) * BLOCK_SIZE / sizeof(struct inode_fs);
-    blocks_for_inodes = num_blocks / 4;
-    blocks_for_inode_bitmap = (num_inodes / 8) / BLOCK_SIZE + 1;
-    blocks_for_block_bitmap = (num_blocks / 8) / BLOCK_SIZE + 1;
-    reserved_blocks = blocks_for_inodes + blocks_for_inode_bitmap + blocks_for_block_bitmap + 1;
+    private_data->num_blocks = st.st_size / BLOCK_SIZE;
+    private_data->num_inodes = (private_data->num_blocks / 4) * BLOCK_SIZE / sizeof(struct inode_fs);
+    private_data->blocks_for_inodes = private_data->num_blocks / 4;
+    private_data->blocks_for_inode_bitmap = (private_data->num_inodes / 8) / BLOCK_SIZE + 1;
+    private_data->blocks_for_block_bitmap = (private_data->num_blocks / 8) / BLOCK_SIZE + 1;
+    private_data->reserved_blocks = private_data->blocks_for_inodes + private_data->blocks_for_inode_bitmap + private_data->blocks_for_block_bitmap + 1;
 
     private_data->superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd, 0);
 
@@ -175,10 +181,10 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    init_superblock(private_data -> superblock);
+    init_superblock(private_data);
 
     // Mapeamos el bitmap de bloques
-    private_data->block_bitmap = mmap(NULL, blocks_for_block_bitmap * BLOCK_SIZE,
+    private_data->block_bitmap = mmap(NULL, private_data->blocks_for_block_bitmap * BLOCK_SIZE,
                                       PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd,
                                       private_data->superblock->block_bitmap_first_block * BLOCK_SIZE);
 
@@ -190,7 +196,7 @@ int main(int argc, char *argv[])
     }
 
     // Mapeamos el bitmap de inodos
-    private_data->inode_bitmap = mmap(NULL, blocks_for_inode_bitmap * BLOCK_SIZE,
+    private_data->inode_bitmap = mmap(NULL, private_data->blocks_for_inode_bitmap * BLOCK_SIZE,
                                       PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd,
                                       private_data->superblock->inode_bitmap_first_block * BLOCK_SIZE);
 
@@ -202,7 +208,7 @@ int main(int argc, char *argv[])
     }
 
     // Mapeamos el primer inodo
-    private_data->inode = mmap(NULL, blocks_for_inodes * BLOCK_SIZE,
+    private_data->inode = mmap(NULL, private_data->blocks_for_inodes * BLOCK_SIZE,
                                PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd,
                                private_data->superblock->first_inode_block * BLOCK_SIZE);
 
@@ -229,12 +235,12 @@ int main(int argc, char *argv[])
 
     // Cerramos el fichero
     close(private_data->fd);
-    init_block_bitmap();
+    init_block_bitmap(private_data);
 
-    (void) create_root(); // Otra barbaridad
+    (void) create_root(private_data); // Otra barbaridad
     // Joder, esto es una barbaridad
     // Pero no se me ocurre otra forma de hacerlo
     // Y no tengo tiempo para pensar en otra forma
 	// análisis parámetros de entrada
-    return fuse_main(argc, argv, &basic_oper, NULL);
+    return fuse_main(argc, argv, &basic_oper, private_data); // private_data
 }

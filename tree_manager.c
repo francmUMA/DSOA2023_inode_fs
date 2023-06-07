@@ -1,7 +1,7 @@
 #include "data_structures_fs.h"
 
 // Tengo que modificar nuestra estructura de árbol de búsqueda
-void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node) // Versión 1 (Como si solo tuvieramos directos)
+void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node, filesystem_t *private_data) // Versión 1 (Como si solo tuvieramos directos)
 {
     int i = 0, end = 0;
     struct directory_entry *entry;
@@ -28,7 +28,7 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
     // Si no hemos encontrado un hueco libre, creamos un nuevo bloque si es posible
     if (!end && i < N_DIRECTOS){
         // Creamos un nuevo bloque
-        directory_dst -> i_directos[i] = create_block();
+        directory_dst -> i_directos[i] = create_block(private_data);
 
         entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
         // Modificamos la entrada de directorio
@@ -48,7 +48,7 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node)
 }
 
 //Eliminar una entrada de directorio
-void remove_entry(char *name, struct inode_fs *directory_dst){
+void remove_entry(char *name, struct inode_fs *directory_dst, filesystem_t *private_data){
     //Buscar la entrada de directorio
     int i = 0, end = 0;
     struct directory_entry *entry;
@@ -75,7 +75,7 @@ void remove_entry(char *name, struct inode_fs *directory_dst){
 }
 
 // Función para buscar un inodo en un directorio concreto
-struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
+struct inode_fs *search_in_directory(char *target, struct inode_fs directory, filesystem_t *private_data){
     //Creamos el inodo que vamos a devolver
     struct inode_fs *res = NULL;
 
@@ -98,14 +98,16 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory){
     return res;
 }
 
-struct inode_fs *search(char *path){
+struct inode_fs *search(char *path, filesystem_t *private_data){
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
     struct inode_fs *current_inode;
     char path_aux[strlen(path)], cmp_path[500] = "";
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     
-    current_inode = search_in_directory(token, private_data -> inode[0]);
+    if(token == NULL) token = ".";
+
+    current_inode = search_in_directory(token, private_data -> inode[0], private_data);
     while(current_inode != NULL && token != NULL && current_inode->i_type == 'd'){
         strcat(cmp_path, "/");
         // Buscamos el inodo en el directorio actual
@@ -118,7 +120,7 @@ struct inode_fs *search(char *path){
         if (strcmp(current_inode->entry->name, "..") != 0) strcat(cmp_path, current_inode->entry->name);
         else strcpy(cmp_path, "");
         token = strtok(NULL, "/");
-        if (token != NULL) current_inode = search_in_directory(token, *current_inode);
+        if (token != NULL) current_inode = search_in_directory(token, *current_inode, private_data);
     }   
     
     // Si no hemos encontrado el inodo, devolvemos NULL
@@ -129,7 +131,9 @@ struct inode_fs *search(char *path){
         strcat(cmp_path, current_inode->entry->name);
     }
 
-    if(strcmp(cmp_path,path) != 0){
+    if(strcmp(cmp_path,"/.") == 0 && strcmp(path,"/") == 0){
+        return current_inode;
+    }else if(strcmp(cmp_path,path) != 0){
         printf("No existe el fichero\n");
         return NULL;
     }
@@ -137,7 +141,7 @@ struct inode_fs *search(char *path){
     return current_inode;
 }
 
-struct inode_fs *search_directory(char *path){
+struct inode_fs *search_directory(char *path, filesystem_t *private_data){
     if (strcmp(path, ".") == 0 || strcmp(path, "/") == 0){
         return &(private_data -> inode[0]);
     }
@@ -145,7 +149,7 @@ struct inode_fs *search_directory(char *path){
     char path_aux[24];
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
-    current_dir = search_in_directory(token, private_data -> inode[0]);
+    current_dir = search_in_directory(token, private_data -> inode[0], private_data);
 
     while(token != NULL){
         if(current_dir == NULL || current_dir->i_type != 'd') {
@@ -153,7 +157,7 @@ struct inode_fs *search_directory(char *path){
         } 
         token = strtok(NULL, "/");
         if (token != NULL){
-            current_dir = search_in_directory(token, *current_dir);
+            current_dir = search_in_directory(token, *current_dir, private_data);
         }
     }
     return current_dir;

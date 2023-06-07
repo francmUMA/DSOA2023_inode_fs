@@ -6,8 +6,8 @@
 //Hay que buscar el primer inodo libre con la funcion creada en bitmap.c
 //Se utiliza la estructura struct inode_fs para crear el inodo y se le pasan los campos por parametro
 
-struct inode_fs *create_inode(char type, char *name){
-    long inode_num = free_inode();
+struct inode_fs *create_inode(char type, char *name, filesystem_t *private_data){
+    long inode_num = free_inode(private_data);
     struct inode_fs *new_inode = &(private_data -> inode[inode_num]);
     new_inode -> i_type = type;
     if (type == 'd'){
@@ -23,27 +23,27 @@ struct inode_fs *create_inode(char type, char *name){
 }
 
 //Creación del inodo root 
-struct inode_fs *create_root(){
-    struct inode_fs *root = create_inode('d', "/");
-    insert(".", root, root);
-    insert("..", root, root);
+struct inode_fs *create_root(filesystem_t *private_data){
+    struct inode_fs *root = create_inode('d', "/", private_data);
+    insert(".", root, root, private_data);
+    insert("..", root, root, private_data);
     return root;
 }
 
 // Eliminación de un inodo
-void remove_inode(struct inode_fs *inode){
+void remove_inode(struct inode_fs *inode, filesystem_t *private_data){
     // Eliminamos el inodo del bitmap
-    remove_inode_bitmap(inode->i_num);
+    remove_inode_bitmap(inode->i_num, private_data);
     
     // Limpiar todos los bloques del inodo
-    clean_inode(inode);
+    clean_inode(inode, private_data);
 
     //Liberamos el inodo
     memset(inode, 0, sizeof(struct inode_fs));
 }
 
 // Añadir carácter
-void add_char_to_inode(struct inode_fs *file, char contenido)
+void add_char_to_inode(struct inode_fs *file, char contenido, filesystem_t *private_data)
 {
     int i = 0, end = 0;
     char *buffer = malloc(sizeof(char)*4096);
@@ -61,7 +61,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
     if(!end && i < N_DIRECTOS) {
         // Estamos ante un bloque vacío
         buffer[0] = contenido;
-        file->i_directos[i] = create_block();
+        file->i_directos[i] = create_block(private_data);
         strcpy(private_data -> block[file->i_directos[i]], buffer);
     } 
     // Liberamos el espacio reservado para el buffer
@@ -69,7 +69,7 @@ void add_char_to_inode(struct inode_fs *file, char contenido)
     buffer = NULL;
 }
 
-void clean_inode(struct inode_fs *file) {
+void clean_inode(struct inode_fs *file, filesystem_t *private_data) {
     // Limpiamos primero los directos
     for(int i = 0; i < N_DIRECTOS && file -> i_directos[i] != NULL; i++){
         memset(private_data -> block[file -> i_directos[i]], 0 , BLOCK_SIZE);
@@ -146,18 +146,18 @@ void clean_inode(struct inode_fs *file) {
 //    ;
 //}
 
-long create_block() {
-    return free_block();
+long create_block(filesystem_t *private_data) {
+    return free_block(private_data);
 }
 
 
-int remove_block(long index)
+int remove_block(long index, filesystem_t *private_data)
 {
-    if(index < 0 || index > num_blocks){
+    if(index < 0 || index > private_data->num_blocks){
         return -1;
     }
     memset(private_data -> block[index], 0, BLOCK_SIZE);
-    remove_block_bitmap(index);
+    remove_block_bitmap(index, private_data);
     return 0;
 }
 
