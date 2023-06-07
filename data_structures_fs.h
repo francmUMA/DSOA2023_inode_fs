@@ -36,10 +36,11 @@ struct inode_fs
     int i_tam;
     int i_permission;
     int i_links;
-    struct directory_entry *entry;
+    long entry_block;
+    uint8_t offset;
     long i_directos[N_DIRECTOS];
     long i_simple_ind[N_SIMPLES];
-    uint8_t i_relleno [4];
+    uint8_t i_relleno [3];
 };
 
 //SUPERBLOQUE

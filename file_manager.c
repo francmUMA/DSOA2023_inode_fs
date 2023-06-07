@@ -40,8 +40,8 @@ void touch(char *path, char type, filesystem_t *private_data){
     while (token != NULL){
         strcpy(name, token);
         token = strtok(NULL, "/");
+        strcat(path_directory, "/");
         if (token != NULL){
-            strcat(path_directory, "/");
             strcat(path_directory, name);
         }
     }
@@ -90,7 +90,7 @@ void print_directory(struct inode_fs directory, filesystem_t *private_data){    
         // Recorremos el bloque
         entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
         int j;
-        for(j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL; j++){ // j es offset
+        for(j = 0; j < 128 && strcmp(entry[j].name,"") != 0; j++){ // j es offset
             // Print the entry
             printf("%s ", entry[j].name);
             if(private_data->inode[entry[j].inode].i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0){
@@ -124,8 +124,9 @@ void unlink_fs(char *path, filesystem_t *private_data){
     
     file -> i_links -= 1;
 
+    struct directory_entry *entry = (struct directory_entry*) private_data -> block[file->entry_block];
     // Remove the file from the directory
-    remove_entry(file->entry->name, dir, private_data);
+    remove_entry(entry[file->offset].name, dir, private_data);
 
     // Remove the file
     if (file -> i_links == 0){
@@ -158,7 +159,7 @@ void rmdir_fs(char* path, filesystem_t *private_data)
         return;
     }else{
         // Eliminamos las entradas . y ..
-        remove_entry(current_dir->entry->name, &private_data->inode[entry[1].inode], private_data); // Casi ponemos una barbaridad profesor
+        remove_entry(((struct directory_entry *) private_data->block[current_dir->entry_block])[current_dir->offset].name, &private_data->inode[entry[1].inode], private_data); // Casi ponemos una barbaridad profesor
         remove_entry("..", current_dir, private_data);
         remove_entry(".", current_dir, private_data);
         // Eliminamos el directorio
@@ -274,6 +275,6 @@ void rename_file(char *path, char *new_name, filesystem_t *private_data){
 
     // Cambiamos el nombre
     // remove_entry(file->entry->name, parent);
-    strcpy(file->entry->name, new_name);
+    strcpy(((struct directory_entry *) private_data->block[new_file->entry_block])[new_file->offset].name, new_name);
     // insert(new_name, parent, file);
 }

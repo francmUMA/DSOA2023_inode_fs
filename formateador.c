@@ -37,19 +37,19 @@ int main()
         return -1;
     }
 
-    // private_data->st_uid= st.st_uid;
-	// private_data->st_gid= st.st_gid;
-	// private_data->st_atime = st.st_atime;
-	// private_data->st_ctime = st.st_ctime;
-	// private_data->st_mtime = st.st_mtime;
+    private_data->st_uid= st.st_uid;
+	private_data->st_gid= st.st_gid;
+	private_data->st_atime = st.st_atime;
+	private_data->st_ctime = st.st_ctime;
+	private_data->st_mtime = st.st_mtime;
 
-    // // Inicializamos la informacion privada del sistema de ficheros
-    // private_data->num_blocks = st.st_size / BLOCK_SIZE;
-    // private_data->num_inodes = (private_data->num_blocks / 4) * BLOCK_SIZE / sizeof(struct inode_fs);
-    // private_data->blocks_for_inodes = private_data->num_blocks / 4;
-    // private_data->blocks_for_inode_bitmap = (private_data->num_inodes / 8) / BLOCK_SIZE + 1;
-    // private_data->blocks_for_block_bitmap = (private_data->num_blocks / 8) / BLOCK_SIZE + 1;
-    // private_data->reserved_blocks = private_data->blocks_for_inodes + private_data->blocks_for_inode_bitmap + private_data->blocks_for_block_bitmap + 1;
+    // Inicializamos la informacion privada del sistema de ficheros
+    private_data->num_blocks = st.st_size / BLOCK_SIZE;
+    private_data->num_inodes = (private_data->num_blocks / 4) * BLOCK_SIZE / sizeof(struct inode_fs);
+    private_data->blocks_for_inodes = private_data->num_blocks / 4;
+    private_data->blocks_for_inode_bitmap = (private_data->num_inodes / 8) / BLOCK_SIZE + 1;
+    private_data->blocks_for_block_bitmap = (private_data->num_blocks / 8) / BLOCK_SIZE + 1;
+    private_data->reserved_blocks = private_data->blocks_for_inodes + private_data->blocks_for_inode_bitmap + private_data->blocks_for_block_bitmap + 1;
 
     private_data->superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd, 0);
 
@@ -60,7 +60,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    // init_superblock(private_data);
+    init_superblock(private_data);
 
     // Mapeamos el bitmap de bloques
     private_data->block_bitmap = mmap(NULL, private_data->blocks_for_block_bitmap * BLOCK_SIZE,
@@ -73,7 +73,7 @@ int main()
         printf("Error al mapear el bitmap de bloques\n");
         return EXIT_FAILURE;
     }
-
+    
     // Mapeamos el bitmap de inodos
     private_data->inode_bitmap = mmap(NULL, private_data->blocks_for_inode_bitmap * BLOCK_SIZE,
                                       PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd,
@@ -112,9 +112,15 @@ int main()
         return EXIT_FAILURE;
     }
 
-    // init_block_bitmap(private_data);
+    init_block_bitmap(private_data);
     // No deja crear el root
-    // create_root(private_data);
+    create_root(private_data);
+    touch("/hola.txt",'-',private_data);
+    // touch("/hola2.txt","-",private_data);
+    struct inode_fs *aux = search("/hola.txt",private_data);
+    printf("Archivo: º%sº\n",((struct directory_entry *) private_data->block[aux->entry_block])[aux->offset].name);
+    // struct inode_fs *aux2 = search("/hola2.txt",private_data);
+    // printf("Archivo: º%sº\n",((struct directory_entry *) private_data->block[aux2->entry_block])[aux2->offset].name);
     print_directory(private_data->inode[0], private_data);
     // Cerramos el fichero
     close(private_data->fd);
