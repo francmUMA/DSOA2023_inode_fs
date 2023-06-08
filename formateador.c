@@ -115,6 +115,8 @@ int main()
     init_block_bitmap(private_data);
     // No deja crear el root
     create_root(private_data);
+    touch("/pruebas",'d',private_data);
+    rmdir_fs("/pruebas",private_data);
     // Cerramos el fichero
     close(private_data->fd);
     return 0;

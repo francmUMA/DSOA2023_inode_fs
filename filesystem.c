@@ -19,12 +19,14 @@ static int getattr_fs(const char *path, struct stat *stbuf)
     filesystem_t *private_data = (filesystem_t *) fuse_get_context()->private_data; // Obtenemos los datos privados
     // Buscamos el inodo
     int res = 0; // Valor a devolver para mostrar que funciona correctamente
-    long inode = search(path,private_data); 
+    long inode = search(path,private_data);
+    printf("Buscando el inodo de %s con número %ld\n",path,inode);
     memset(stbuf, 0, sizeof(struct stat));
     if(inode == -1){
         res = -ENOENT;
     }else{
         // Copiamos los datos del inodo al stat
+        printf("Hemos entrado en el else\n");
         stbuf->st_mode = private_data->inode[inode].i_permission;
         stbuf->st_nlink = private_data->inode[inode].i_links;
         stbuf->st_uid = private_data->st_uid;
@@ -34,6 +36,7 @@ static int getattr_fs(const char *path, struct stat *stbuf)
         stbuf->st_ctime = private_data->st_ctime;
         stbuf->st_size = private_data->inode[inode].i_tam;
         stbuf->st_blocks = private_data->inode[inode].i_tam / BLOCK_SIZE + 1;
+        printf("Hemos copiado los datos del inodo al stat\n");
     }
 	return res;
 }
@@ -56,7 +59,8 @@ static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
     int i = 0;
     while(i < N_DIRECTOS && private_data->inode[inode].i_directos[i] != 0){
         entry = (struct directory_entry *) private_data->block[private_data->inode[inode].i_directos[i]];
-        for(int j = 0; j < 128 && strcmp(entry[j].name, "") != 0; j++){
+        for(int j = 0; j < 128 && (strcmp(entry[j].name, "") != 0 || entry[j].inode != 0); j++){
+            if(entry[j].inode == -1) continue;
             if(filler(buf, entry[j].name, NULL, 0) != 0) return -ENOMEM;
         }
         i++;
@@ -182,6 +186,25 @@ int unlink_fuse(const char *path){
     return 0;
 }
 
+int rename_fuse(const char *path, const char *name, unsigned int flags)
+{
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    long inode = search(path,private_data);
+
+    if(inode == -1){
+        return -ENOENT;
+    }
+
+    rename_file(path, name, private_data);
+    return 0;
+}
+
+int utimens_fuse(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)
+{
+    // Y nos la pela
+    return 0;
+}
+
 /***********************************
  * operaciones FUSE
  * */
@@ -194,7 +217,9 @@ static struct fuse_operations basic_oper = {
     .create = create_fs,
     .write = write_fs,
     .rmdir = rmdir_fuse,
-    .unlink = unlink_fs,
+    .unlink = unlink_fuse,
+    .rename = rename_fuse,
+    .utimens = utimens_fuse,
 };
 
 int main(int argc, char *argv[])

@@ -64,13 +64,14 @@ void remove_entry(char *name, long directory_dst_number, filesystem_t *private_d
         entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_dst_number].i_directos[i]];
         // Recorremos el bloque
         int j;
-        for(j = 0; j < 128 && strcmp(entry[j].name, "") != 0 && !end; j++){
-
+        for(j = 0; j < 128 && (strcmp(entry[j].name, "") != 0 || entry[j].inode != 0) && !end; j++){
+            if(entry[j].inode == -1) continue;
             // Si es la entrada que buscamos, la eliminamos
             if (strcmp(entry[j].name, name) == 0){
 
                 //Se elimina la entrada de directorio
                 memset(&entry[j], 0, sizeof(struct directory_entry));
+                entry[j].inode = -1;
                 end = 1;
             }  
         }
@@ -95,7 +96,7 @@ long search_in_directory(char *target, long directory_number, filesystem_t *priv
         // Recorremos el bloque
         entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_number].i_directos[i]];
         int j;
-        for (j = 0; j < 128 && strcmp(entry[j].name,"") != 0 && !end; j++){
+        for (j = 0; j < 128 && (strcmp(entry[j].name, "") != 0 || entry[j].inode != 0) && !end; j++){
             if (strcmp(entry[j].name, target) == 0){
                 // Si es el inodo que buscamos, lo devolvemos
                 res = entry[j].inode;
@@ -108,6 +109,12 @@ long search_in_directory(char *target, long directory_number, filesystem_t *priv
 
 long search(char *path, filesystem_t *private_data){
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
+    if(strcmp(path,"") == 0)
+    {
+        printf("No se ha introducido un path\n");
+        return -1;
+    }
+    
     long current_inode_number;
     char path_aux[strlen(path)], cmp_path[500] = "";
     strcpy(path_aux, path);
@@ -116,6 +123,10 @@ long search(char *path, filesystem_t *private_data){
     if(token == NULL) token = ".";
 
     current_inode_number = search_in_directory(token, 0, private_data);
+    if(current_inode_number == -1) {
+        printf("No se ha encontrado el archivo\n");
+        return -1;
+    }
     while(private_data->inode[current_inode_number].i_type != 0 && token != NULL && private_data->inode[current_inode_number].i_type == 'd'){
         strcat(cmp_path, "/");
         // Buscamos el inodo en el directorio actual
@@ -130,6 +141,10 @@ long search(char *path, filesystem_t *private_data){
         else strcpy(cmp_path, "");
         token = strtok(NULL, "/");
         if (token != NULL) current_inode_number = search_in_directory(token, current_inode_number, private_data);
+        if(current_inode_number == -1) {
+            printf("No se ha encontrado el archivo\n");
+            return -1;
+        }
     }   
     
     // Si no hemos encontrado el inodo, devolvemos NULL

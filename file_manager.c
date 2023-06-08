@@ -65,7 +65,7 @@ void touch(char *path, char type, filesystem_t *private_data)
 
     // Search for the file
     long file_number = search_in_directory(name, dir_number, private_data);
-    if (private_data->inode[file_number].i_type != 0)
+    if (file_number != -1 && private_data->inode[file_number].i_type != 0)
     {
         printf("File already exists\n");
         return;
@@ -100,14 +100,16 @@ void print_directory(long directory, filesystem_t *private_data)
         // Recorremos el bloque
         entry = (struct directory_entry *)private_data->block[private_data->inode[directory].i_directos[i]];
         int j;
-        for (j = 0; j < 128 && strcmp(entry[j].name, "") != 0; j++)
+        for (j = 0; j < 128 && (strcmp(entry[j].name, "") != 0 || entry[j].inode != 0); j++)
         { // j es offset
-            // Print the entry
-            printf("%s ", entry[j].name);
-            if (private_data->inode[entry[j].inode].i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0)
-            {
-                printf("\n -> ");
-                print_directory(entry[j].inode, private_data);
+            if(entry[j].inode != -1){
+                // Print the entry
+                printf("%s ", entry[j].name);
+                if (private_data->inode[entry[j].inode].i_type == 'd' && strcmp(entry[j].name, ".") != 0 && strcmp(entry[j].name, "..") != 0)
+                {
+                    printf("\n -> ");
+                    print_directory(entry[j].inode, private_data);
+                }
             }
         }
         printf("\n");
@@ -162,16 +164,27 @@ void rmdir_fs(char *path, filesystem_t *private_data)
         return;
     }
 
-    int i = 0;
+    int i = 0, n_dentries = 0, end = 0;
     struct directory_entry *entry;
     // Comprobamos que el directorio está vacío
     entry = (struct directory_entry *)private_data->block[private_data->inode[current_dir_number].i_directos[i]];
-    while (&private_data->inode[entry[i].inode] != NULL)
+    while (i < N_DIRECTOS && !end && private_data->inode[entry[i].inode].i_type != 0)
     {
+        // Recorremos el bloque
+        for (int j = 0; j < 128 && (strcmp(entry[j].name, "") != 0 || entry[j].inode != 0) && !end; j++)
+        { // j es offset
+            if(entry[j].inode != -1){
+                n_dentries++;
+            }
+            if(strcmp(entry[j+1].name, "") == 0 && entry[j+1].inode == 0){
+                end = 1;
+            }
+        }
+
         i++;
     }
 
-    if (i > 2)
+    if (n_dentries > 2)
     {
         printf("El directorio no está vacío\n");
         return;
