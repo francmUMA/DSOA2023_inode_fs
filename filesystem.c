@@ -148,7 +148,7 @@ static int write_fs(const char *path, const char *buf, size_t size, off_t offset
     printf("--------------------------------------------------------------\n");
     printf("Vamos a escribir\n");
     printf("--------------------------------------------------------------\n");
-    
+
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     long inode = search(path,private_data);
 
@@ -268,6 +268,7 @@ int truncate_fuse (const char *path, off_t offset, struct fuse_file_info *fi)
     if(inode_num < 0) return -ENOENT;
 
     private_data->inode[inode_num].i_tam = 0;
+    
     return 0;
 }
 
