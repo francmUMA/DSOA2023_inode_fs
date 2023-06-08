@@ -145,13 +145,39 @@ int create_fs(const char *path, mode_t mode,  struct fuse_file_info *fi){
 static int write_fs(const char *path, const char *buf, size_t size, off_t offset,
 				   struct fuse_file_info *fi)
 {
+    printf("--------------------------------------------------------------\n");
+    printf("Vamos a escribir\n");
+    printf("--------------------------------------------------------------\n");
+    
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     long inode = search(path,private_data);
 
     if(inode < 0) return -ENOENT;
 
+    printf("--------------------------------------------------------------\n");
+    printf("Path: %s\n y contenido a añadir: %s\n Offset: %d\n",path, buf,offset);
+    printf("--------------------------------------------------------------\n");
+
+    //Comprobamos que el offset no sea mayor que el tamaño del fichero
+    if(offset > private_data->inode[inode].i_tam){
+        return -EFBIG;
+    }
+
+    int res = 0;
     //Escribimos el contenido en el fichero
-    overwrite(path, buf, private_data);
+    if(offset > 0){
+        res = append(path, buf, private_data);
+    }else{
+        res = overwrite(path, buf, private_data);
+    }
+
+    if(res < 0)
+    {
+        printf("--------------------------------------------------------------\n");
+        printf("Error al escribir\n");
+        printf("--------------------------------------------------------------\n");
+        return res;
+    }
 
     printf("Contenido copiado: %s\n",buf);
 
@@ -233,6 +259,18 @@ int chmod_fuse (const char *path, mode_t permisos, struct fuse_file_info *fi)
     return 0;
 }
 
+int truncate_fuse (const char *path, off_t offset, struct fuse_file_info *fi)
+{
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+
+    long inode_num = search(path, private_data);
+
+    if(inode_num < 0) return -ENOENT;
+
+    private_data->inode[inode_num].i_tam = 0;
+    return 0;
+}
+
 
 /***********************************
  * operaciones FUSE
@@ -250,6 +288,7 @@ static struct fuse_operations basic_oper = {
     .rename = rename_fuse,
     .utimens = utimens_fuse,
     .chmod = chmod_fuse,
+    .truncate = truncate_fuse,
 };
 
 int main(int argc, char *argv[])
