@@ -6,7 +6,6 @@
 #define DATA_STRUCTURES_FS_H
 
 #define N_DIRECTOS 10
-#define N_SIMPLES 1
 
 #define BLOCK_SIZE 4096
 
@@ -39,8 +38,7 @@ struct inode_fs
     long entry_block;
     uint8_t offset;
     long i_directos[N_DIRECTOS];
-    long i_simple_ind[N_SIMPLES];
-    uint8_t i_relleno [3];
+    uint8_t i_relleno [7];
 };
 
 //SUPERBLOQUE
@@ -93,19 +91,17 @@ long free_block(filesystem_t *);
 void remove_block_bitmap(long, filesystem_t *);
 
 // inode.c
-struct inode_fs *create_inode(char, char *, filesystem_t *);
+long create_inode(char, char *, filesystem_t *);
 void create_root(filesystem_t *);
-void remove_inode(struct inode_fs *, filesystem_t *);
-void clean_inode(struct inode_fs *, filesystem_t *);
-// block_list get_blocks_indirect(long);
-// void add_block_indirect(long, long);
+void remove_inode(long , filesystem_t *);
+void clean_inode(long , filesystem_t *);
 long create_block(filesystem_t *);
 int remove_block(long, filesystem_t *);
 
 // file_manager.c
-char *get_directory(char *);
+char *get_path_directory(char *);
 void touch(char *, char, filesystem_t *);
-void print_directory(struct inode_fs, filesystem_t *);
+void print_directory(long, filesystem_t *);
 void unlink_fs(char *, filesystem_t *);
 void rmdir_fs(char *, filesystem_t *);
 int append(char *, char *, filesystem_t *);
@@ -114,11 +110,11 @@ char *read_file(char *, filesystem_t *);
 void rename_file(char *, char *, filesystem_t *);
 
 // tree_manager.c
-void insert(char *, struct inode_fs *, struct inode_fs *, filesystem_t *);
-struct inode_fs *search_in_directory(char *, struct inode_fs, filesystem_t *);
-struct inode_fs *search(char *, filesystem_t *);
-struct inode_fs *search_directory(char *, filesystem_t *);
-void remove_entry(char *, struct inode_fs *, filesystem_t *);
+void insert(char *, long, long, filesystem_t *);
+long search_in_directory(char *, long, filesystem_t *);
+long search(char *, filesystem_t *);
+long search_directory(char *, filesystem_t *);
+void remove_entry(char *, long, filesystem_t *);
 
 // init.c
 void init_superblock(filesystem_t *);

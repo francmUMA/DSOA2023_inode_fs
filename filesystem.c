@@ -19,25 +19,22 @@ static int getattr_fs(const char *path, struct stat *stbuf)
     filesystem_t *private_data = (filesystem_t *) fuse_get_context()->private_data; // Obtenemos los datos privados
     // Buscamos el inodo
     int res = 0; // Valor a devolver para mostrar que funciona correctamente
-    struct inode_fs *inode = search(path, private_data);
-
+    long inode = search(path,private_data); 
     memset(stbuf, 0, sizeof(struct stat));
-    if(inode == NULL){
+    if(inode == -1){
         res = -ENOENT;
     }else{
         // Copiamos los datos del inodo al stat
-        stbuf->st_mode = S_IFREG | inode->i_permission;
-        stbuf->st_nlink = inode->i_links;
+        stbuf->st_mode = private_data->inode[inode].i_permission;
+        stbuf->st_nlink = private_data->inode[inode].i_links;
         stbuf->st_uid = private_data->st_uid;
         stbuf->st_gid = private_data->st_gid;
-        // Otra barbarie
         stbuf->st_atime = private_data->st_atime;
         stbuf->st_mtime = private_data->st_mtime;
         stbuf->st_ctime = private_data->st_ctime;
-        stbuf->st_size = inode->i_tam;
-        stbuf->st_blocks = inode->i_tam / BLOCK_SIZE + 1;
+        stbuf->st_size = private_data->inode[inode].i_tam;
+        stbuf->st_blocks = private_data->inode[inode].i_tam / BLOCK_SIZE + 1;
     }
-    
 	return res;
 }
 
@@ -48,18 +45,18 @@ static int readdir_fs(const char *path, void *buf, fuse_fill_dir_t filler,
 					  off_t offset, struct fuse_file_info *fi)
 {
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
-    struct inode_fs *inode = search(path,private_data);
+    long inode = search(path,private_data);
     // Si el inodo no es directorio, devolvemos error
     // Error de conexión con el otro extremo
-    if(inode == NULL && strcmp(inode->i_type,"d") != 0){
+    if(inode == -1 && strcmp(private_data->inode[inode].i_type,"d") != 0){
         return -ENOENT;
     }
 
     struct directory_entry *entry;
     int i = 0;
-    while(i < N_DIRECTOS && &inode->i_directos[i] != NULL){
-        entry = (struct directory_entry *) private_data->block[inode->i_directos[i]];
-        for(int j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL; j++){
+    while(i < N_DIRECTOS && private_data->inode[inode].i_directos[i] != 0){
+        entry = (struct directory_entry *) private_data->block[private_data->inode[inode].i_directos[i]];
+        for(int j = 0; j < 128 && strcmp(entry[j].name, "") != 0; j++){
             if(filler(buf, entry[j].name, NULL, 0) != 0) return -ENOMEM;
         }
         i++;
@@ -74,15 +71,14 @@ static int open_fs(const char *path, struct fuse_file_info *fi)
 {
     filesystem_t *private_data = (filesystem_t *) fuse_get_context()->private_data; // Obtenemos los datos privados
 	/* completar */
-    struct inode_fs *inode = search(path,private_data);
+    long inode = search(path,private_data);
 
-    if(inode == NULL)
+    if(inode == -1)
     {
-        fi->fh = -1;
         return -ENOENT;
     } 
 
-    fi->fh = inode->i_num;
+    fi->fh = inode;
 
 	return 0;
 }
@@ -112,11 +108,79 @@ static int read_fs(const char *path, char *buf, size_t size, off_t offset,
 	return size;
 }
 
-// static int write_fs(const char *path, char *buf, size_t size, off_t offset,
-// 				   struct fuse_file_info *fi)
-// {
-// 	return size;
-// }
+int mkdir_fs(const char *path, mode_t mode){
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    //Comprobamos que no exista ya ese path
+    if(search(path,private_data) != -1){
+        return -EEXIST;
+    }
+    touch(path, 'd', private_data);
+    return 0;
+}
+
+int create_fs(const char *path, mode_t mode,  struct fuse_file_info *fi){
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    //Comprobamos que no exista ya ese path
+    long inode = search(path,private_data);
+    if(inode != -1){
+        return -EEXIST;
+    }
+    touch(path, '-', private_data);
+    fi->fh = search(path,private_data);
+    return 0;
+}
+
+static int write_fs(const char *path, const char *buf, size_t size, off_t offset,
+				   struct fuse_file_info *fi)
+{
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    size_t len;
+    long inode = search(path,private_data);
+
+    if(inode < 0) return -ENOENT;
+
+    //Nos traemos su contenido
+    char *content = read_file(path,private_data);
+    
+    //Modificamos a partir del offset que nos pasan
+    memcpy(content + offset, buf, size);
+
+    //Escribimos el contenido en el fichero
+    overwrite(path, content, private_data);
+
+    size = strlen(read_file(path,private_data));
+    
+	return size;
+}
+
+int rmdir_fuse (const char *path){  //Ya tenemos una funcion que se llama rmdir_fs
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    long inode = search(path,private_data);
+    if(inode == -1){
+        return -ENOENT;
+    }
+    if(private_data->inode[inode].i_type != 'd'){
+        return -ENOTDIR;
+    }
+    if(private_data->inode[inode].i_links > 2){
+        return -ENOTEMPTY;
+    }
+    rmdir_fs(path, private_data);
+    return 0;
+}
+
+int unlink_fuse(const char *path){
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+    long inode = search(path,private_data);
+    if(inode == -1){
+        return -ENOENT;
+    }   
+    if(private_data->inode[inode].i_type != '-'){
+        return -EISDIR;
+    }
+    unlink_fs(path, private_data);
+    return 0;
+}
 
 /***********************************
  * operaciones FUSE
@@ -126,6 +190,11 @@ static struct fuse_operations basic_oper = {
 	.readdir = readdir_fs,
 	.open = open_fs,
 	.read = read_fs,
+    .mkdir = mkdir_fs,
+    .create = create_fs,
+    .write = write_fs,
+    .rmdir = rmdir_fuse,
+    .unlink = unlink_fs,
 };
 
 int main(int argc, char *argv[])

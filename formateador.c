@@ -115,13 +115,6 @@ int main()
     init_block_bitmap(private_data);
     // No deja crear el root
     create_root(private_data);
-    touch("/hola.txt",'-',private_data);
-    // touch("/hola2.txt","-",private_data);
-    struct inode_fs *aux = search("/hola.txt",private_data);
-    printf("Archivo: º%sº\n",((struct directory_entry *) private_data->block[aux->entry_block])[aux->offset].name);
-    // struct inode_fs *aux2 = search("/hola2.txt",private_data);
-    // printf("Archivo: º%sº\n",((struct directory_entry *) private_data->block[aux2->entry_block])[aux2->offset].name);
-    print_directory(private_data->inode[0], private_data);
     // Cerramos el fichero
     close(private_data->fd);
     return 0;

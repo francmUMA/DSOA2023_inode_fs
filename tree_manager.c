@@ -1,30 +1,30 @@
 #include "data_structures_fs.h"
 
 // Tengo que modificar nuestra estructura de árbol de búsqueda
-void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node, filesystem_t *private_data) // Versión 1 (Como si solo tuvieramos directos)
+void insert(char *name, long directory_dst_number, long n_node_number, filesystem_t *private_data) // Versión 1 (Como si solo tuvieramos directos)
 {
     int i = 0, end = 0;
     struct directory_entry *entry;
-    while(i < N_DIRECTOS && directory_dst->i_directos[i] != NULL && !end){
+    while(i < N_DIRECTOS && private_data->inode[directory_dst_number].i_directos[i] != 0 && !end){
         // Vamos a buscar el primer hueco libre en el bloque
-        entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_dst_number].i_directos[i]];
         // Recorremos el bloque
         int j = 0;
-        while(j < 128 && &(private_data->inode[entry[j].inode]) != NULL) j++;
+        while(j < 128 && strcmp(entry[j].name, "") != 0) j++;
         // Nos aseguramos de que nuestra entrada es null
-        if (&private_data->inode[entry[j].inode] == NULL)
+        if (strcmp(entry[j].name, "") == 0)
         {
             // Guardamos nuestra entrada de bloque
             strcpy(entry[j].name, name);
-            n_node -> i_links += 1;
-            private_data->inode[entry[j].inode] = *n_node;
+            private_data->inode[n_node_number].i_links += 1;
+            entry[j].inode = n_node_number;
             if (strcmp(name, ".") != 0 && strcmp(name, "..") != 0)
             {
-                private_data->inode[entry[j].inode].entry_block = directory_dst->i_directos[i];
+                private_data->inode[entry[j].inode].entry_block = private_data->inode[directory_dst_number].i_directos[i];
                 private_data->inode[entry[j].inode].offset = j;
             }
-            else if (strcmp(name, ".") == 0 && n_node->i_num == 0){
-                private_data->inode[entry[j].inode].entry_block = directory_dst->i_directos[i];
+            else if (strcmp(name, ".") == 0 && private_data->inode[n_node_number].i_num == 0){
+                private_data->inode[entry[j].inode].entry_block = private_data->inode[directory_dst_number].i_directos[i];
                 private_data->inode[entry[j].inode].offset = j;
             } 
             end = 1;
@@ -35,19 +35,19 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node,
     // Si no hemos encontrado un hueco libre, creamos un nuevo bloque si es posible
     if (!end && i < N_DIRECTOS){
         // Creamos un nuevo bloque
-        directory_dst -> i_directos[i] = create_block(private_data);
+        private_data->inode[directory_dst_number].i_directos[i] = create_block(private_data);
 
-        entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_dst_number].i_directos[i]];
         // Modificamos la entrada de directorio
         strcpy(entry[0].name, name);
 
         // Si n_node es el mismo inodo que directory_dst, se guarda en la entry el directory_dst
-        if ((*n_node).i_num == (*directory_dst).i_num){
-            private_data->inode[entry[0].inode] = *directory_dst;
+        if (private_data->inode[n_node_number].i_num == private_data->inode[directory_dst_number].i_num){
+            entry[0].inode = directory_dst_number;
         } else {
-            private_data->inode[entry[0].inode] = *n_node;
+            entry[0].inode = n_node_number;
         }
-        private_data->inode[entry[0].inode].entry_block = directory_dst->i_directos[i];
+        private_data->inode[entry[0].inode].entry_block = private_data->inode[directory_dst_number].i_directos[i];
         private_data->inode[entry[0].inode].offset = 0;
     }
     else if (!end) {
@@ -56,15 +56,15 @@ void insert(char *name, struct inode_fs *directory_dst, struct inode_fs* n_node,
 }
 
 //Eliminar una entrada de directorio
-void remove_entry(char *name, struct inode_fs *directory_dst, filesystem_t *private_data){
+void remove_entry(char *name, long directory_dst_number, filesystem_t *private_data){
     //Buscar la entrada de directorio
     int i = 0, end = 0;
     struct directory_entry *entry;
-    while(i < N_DIRECTOS && directory_dst->i_directos[i] != NULL && !end){
-        entry = (struct directory_entry*) private_data -> block[directory_dst->i_directos[i]];
+    while(i < N_DIRECTOS && private_data->inode[directory_dst_number].i_directos[i] != 0 && !end){
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_dst_number].i_directos[i]];
         // Recorremos el bloque
         int j;
-        for(j = 0; j < 128 && &private_data->inode[entry[j].inode] != NULL && !end; j++){
+        for(j = 0; j < 128 && strcmp(entry[j].name, "") != 0 && !end; j++){
 
             // Si es la entrada que buscamos, la eliminamos
             if (strcmp(entry[j].name, name) == 0){
@@ -83,22 +83,22 @@ void remove_entry(char *name, struct inode_fs *directory_dst, filesystem_t *priv
 }
 
 // Función para buscar un inodo en un directorio concreto
-struct inode_fs *search_in_directory(char *target, struct inode_fs directory, filesystem_t *private_data){
+long search_in_directory(char *target, long directory_number, filesystem_t *private_data){
     //Creamos el inodo que vamos a devolver
-    struct inode_fs *res = NULL;
+    long res = -1;
 
     //Recorremos el directorio
     int end = 0;
     struct directory_entry *entry;
 
-    for (int i = 0; i < N_DIRECTOS && &directory.i_directos[i] != NULL & !end; i++){
+    for (int i = 0; i < N_DIRECTOS && private_data->inode[directory_number].i_directos[i] != 0 & !end; i++){
         // Recorremos el bloque
-        entry = (struct directory_entry*) private_data -> block[directory.i_directos[i]];
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[directory_number].i_directos[i]];
         int j;
         for (j = 0; j < 128 && strcmp(entry[j].name,"") != 0 && !end; j++){
             if (strcmp(entry[j].name, target) == 0){
                 // Si es el inodo que buscamos, lo devolvemos
-                res = &private_data->inode[entry[j].inode];
+                res = entry[j].inode;
                 end = 1;
             }
         }
@@ -106,70 +106,70 @@ struct inode_fs *search_in_directory(char *target, struct inode_fs directory, fi
     return res;
 }
 
-struct inode_fs *search(char *path, filesystem_t *private_data){
+long search(char *path, filesystem_t *private_data){
     // Parsing path (nuestro path acaba en el directorio del archivo que queremos buscar)
-    struct inode_fs *current_inode;
+    long current_inode_number;
     char path_aux[strlen(path)], cmp_path[500] = "";
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
     struct directory_entry *entry;
     if(token == NULL) token = ".";
 
-    current_inode = search_in_directory(token, private_data -> inode[0], private_data);
-    while(current_inode != NULL && token != NULL && current_inode->i_type == 'd'){
+    current_inode_number = search_in_directory(token, 0, private_data);
+    while(private_data->inode[current_inode_number].i_type != 0 && token != NULL && private_data->inode[current_inode_number].i_type == 'd'){
         strcat(cmp_path, "/");
         // Buscamos el inodo en el directorio actual
-        if(current_inode == NULL) {
+        if(private_data->inode[current_inode_number].i_type == 0) {
             printf("No se ha encontrado el directorio\n");
-            return NULL;
+            return -1;
         }
         
         // Concatenamos el path
-        entry = (struct directory_entry*) private_data -> block[current_inode->entry_block];
-        if (strcmp(entry[current_inode->offset].name, "..") != 0) strcat(cmp_path, entry[current_inode->offset].name);
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[current_inode_number].entry_block];
+        if (strcmp(entry[private_data->inode[current_inode_number].offset].name, "..") != 0) strcat(cmp_path, entry[private_data->inode[current_inode_number].offset].name);
         else strcpy(cmp_path, "");
         token = strtok(NULL, "/");
-        if (token != NULL) current_inode = search_in_directory(token, *current_inode, private_data);
+        if (token != NULL) current_inode_number = search_in_directory(token, current_inode_number, private_data);
     }   
     
     // Si no hemos encontrado el inodo, devolvemos NULL
-    if (current_inode == NULL) return NULL;
+    if (private_data->inode[current_inode_number].i_type == 0) return -1;
 
-    if (current_inode ->i_type == '-') {
-        entry = (struct directory_entry*) private_data -> block[current_inode->entry_block];
+    if (private_data->inode[current_inode_number].i_type == '-') {
+        entry = (struct directory_entry*) private_data -> block[private_data->inode[current_inode_number].entry_block];
         strcat(cmp_path, "/");
-        strcat(cmp_path, entry[current_inode->offset].name);
+        strcat(cmp_path, entry[private_data->inode[current_inode_number].offset].name);
     }
 
     if(strcmp(cmp_path,"/.") == 0 && strcmp(path,"/") == 0){
-        return current_inode;
+        return current_inode_number;
     }else if(strcmp(cmp_path,path) != 0){
         printf("No existe el fichero\n");
-        return NULL;
+        return -1;
     }
 
-    return current_inode;
+    return current_inode_number;
 }
 
-struct inode_fs *search_directory(char *path, filesystem_t *private_data){
+long search_directory(char *path, filesystem_t *private_data){
     if (strcmp(path, ".") == 0 || strcmp(path, "/") == 0){
-        return &(private_data -> inode[0]);
+        return 0;
     }
-    struct inode_fs *current_dir;
+    long current_dir_number;
     char path_aux[24];
     strcpy(path_aux, path);
     char *token = strtok(path_aux, "/");
-    current_dir = search_in_directory(token, private_data -> inode[0], private_data);
+    current_dir_number = search_in_directory(token, 0, private_data);
 
     while(token != NULL){
-        if(current_dir == NULL || current_dir->i_type != 'd') {
-            return NULL;
+        if(private_data->inode[current_dir_number].i_type == 0 || private_data->inode[current_dir_number].i_type != 'd') {
+            return -1;
         } 
         token = strtok(NULL, "/");
         if (token != NULL){
-            current_dir = search_in_directory(token, *current_dir, private_data);
+            current_dir_number = search_in_directory(token, current_dir_number, private_data);
         }
     }
-    return current_dir;
+    return current_dir_number;
 }
 
