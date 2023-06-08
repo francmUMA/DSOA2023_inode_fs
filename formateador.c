@@ -12,13 +12,18 @@
 #include <errno.h>
 #include <fcntl.h>
 
-int main()
+int main(int argc, char *argv[])
 {
     // Inicializamos el sistema de ficheros
     filesystem_t *private_data = malloc(sizeof(filesystem_t));
 
+	private_data->fichero = strdup(argv[argc - 1]); // fichero 
+
+    printf("Fichero: %s\n", private_data->fichero);
+	// análisis parámetros de entrada
+    // Nos traemos todo el contenido del fichero en private_data
     // Abrir el fichero con el contenido del filesystem
-    private_data->fd = open("filesystem.img", O_RDWR);
+    private_data->fd = open(private_data->fichero, O_RDWR);
 
     if (private_data->fd == -1)
     {
@@ -61,7 +66,6 @@ int main()
     }
 
     init_superblock(private_data);
-
     // Mapeamos el bitmap de bloques
     private_data->block_bitmap = mmap(NULL, private_data->blocks_for_block_bitmap * BLOCK_SIZE,
                                       PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd,
@@ -115,11 +119,7 @@ int main()
     init_block_bitmap(private_data);
     // No deja crear el root
     create_root(private_data);
-    touch("/test.txt",'-',private_data);
-    overwrite("/test.txt","Hola mundo",private_data);
-    char* content = read_file("/test.txt",private_data);
-    printf("%s\n",content);
-    // Cerramos el fichero
+  
     close(private_data->fd);
     return 0;
 }

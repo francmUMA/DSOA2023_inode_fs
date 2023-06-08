@@ -341,9 +341,10 @@ int main(int argc, char *argv[])
     private_data->reserved_blocks = private_data->blocks_for_inodes + private_data->blocks_for_inode_bitmap + private_data->blocks_for_block_bitmap + 1;
 
     private_data->superblock = mmap(NULL, BLOCK_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, private_data->fd, 0);
+    printf("El magic number es: %d\n", private_data->superblock->MAGIC_NUM);
 
     // Si no se mapea bien, hay un error
-    if (private_data->superblock == MAP_FAILED)
+    if (private_data->superblock == MAP_FAILED || private_data->superblock->MAGIC_NUM != 17062023)
     {
         printf("Error al mapear el superbloque\n");
         return EXIT_FAILURE;
