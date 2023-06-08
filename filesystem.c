@@ -84,6 +84,10 @@ static int open_fs(const char *path, struct fuse_file_info *fi)
 
     fi->fh = inode;
 
+    printf("--------------------------------------------------------------\n");
+    printf("El archivo que abrimos: %s\n", path);
+    printf("--------------------------------------------------------------\n");
+
 	return 0;
 }
 
@@ -126,9 +130,13 @@ int create_fs(const char *path, mode_t mode,  struct fuse_file_info *fi){
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     //Comprobamos que no exista ya ese path
     long inode = search(path,private_data);
+    printf("--------------------------------------------------------------\n");
+    printf("El inodo es: %ld\n",inode);
+    printf("--------------------------------------------------------------\n");
     if(inode != -1){
         return -EEXIST;
     }
+
     touch(path, '-', private_data);
     fi->fh = search(path,private_data);
     return 0;
@@ -138,22 +146,15 @@ static int write_fs(const char *path, const char *buf, size_t size, off_t offset
 				   struct fuse_file_info *fi)
 {
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
-    size_t len;
     long inode = search(path,private_data);
 
     if(inode < 0) return -ENOENT;
 
-    //Nos traemos su contenido
-    char *content = read_file(path,private_data);
-    
-    //Modificamos a partir del offset que nos pasan
-    memcpy(content + offset, buf, size);
-
     //Escribimos el contenido en el fichero
-    overwrite(path, content, private_data);
+    overwrite(path, buf, private_data);
 
-    size = strlen(read_file(path,private_data));
-    
+    printf("Contenido copiado: %s\n",buf);
+
 	return size;
 }
 
@@ -213,11 +214,25 @@ int rename_fuse(const char *path, const char *path_name, unsigned int flags)
     return 0;
 }
 
-int utimens_fuse(const char *path, const struct timespec tv[2], struct fuse_file_info *fi)
+int utimens_fuse(const char *path, const struct timespec *tv, struct fuse_file_info *fi)
 {
-    // Y nos la pela
     return 0;
 }
+
+int chmod_fuse (const char *path, mode_t permisos, struct fuse_file_info *fi)
+{
+    filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
+
+    long inode_num = search(path, private_data);
+
+    if(inode_num < 0) return -ENOENT;
+
+    // Si existe, cambiamos los permisos
+    private_data->inode[inode_num].i_permission = permisos;
+
+    return 0;
+}
+
 
 /***********************************
  * operaciones FUSE
@@ -234,6 +249,7 @@ static struct fuse_operations basic_oper = {
     .unlink = unlink_fuse,
     .rename = rename_fuse,
     .utimens = utimens_fuse,
+    .chmod = chmod_fuse,
 };
 
 int main(int argc, char *argv[])

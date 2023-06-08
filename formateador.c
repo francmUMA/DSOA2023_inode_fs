@@ -115,8 +115,10 @@ int main()
     init_block_bitmap(private_data);
     // No deja crear el root
     create_root(private_data);
-    touch("/pruebas",'d',private_data);
-    rename_file("/pruebas","pruebas2",private_data);
+    touch("/test.txt",'-',private_data);
+    overwrite("/test.txt","Hola mundo",private_data);
+    char* content = read_file("/test.txt",private_data);
+    printf("%s\n",content);
     // Cerramos el fichero
     close(private_data->fd);
     return 0;
