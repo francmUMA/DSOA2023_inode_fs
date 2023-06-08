@@ -186,7 +186,7 @@ int unlink_fuse(const char *path){
     return 0;
 }
 
-int rename_fuse(const char *path, const char *name, unsigned int flags)
+int rename_fuse(const char *path, const char *path_name, unsigned int flags)
 {
     filesystem_t *private_data = (filesystem_t *)fuse_get_context()->private_data; // Obtenemos los datos privados
     long inode = search(path,private_data);
@@ -195,7 +195,21 @@ int rename_fuse(const char *path, const char *name, unsigned int flags)
         return -ENOENT;
     }
 
-    rename_file(path, name, private_data);
+    printf("El path es %s\n", path);
+    printf("El name es %s\n", path_name);
+
+    char *new_name = malloc(strlen(path_name));
+    memset(new_name, 0, strlen(path_name));
+    char *token = strtok(path_name, "/");
+    while (token != NULL)
+    {
+        strcpy(new_name, token);
+        token = strtok(NULL, "/");
+    }
+    printf("El new_name es %s\n", new_name);
+
+    rename_file(path, new_name, private_data);
+
     return 0;
 }
 

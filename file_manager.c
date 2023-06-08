@@ -311,12 +311,12 @@ void rename_file(char *path, char *new_name, filesystem_t *private_data)
     // Buscamos en el directorio
     long new_file_number = search_in_directory(new_name, parent_number, private_data);
 
-    if (private_data->inode[new_file_number].i_type != 0)
+    if (new_file_number > -1)
     {
         printf("Ya existe un archivo con ese nombre\n");
         return;
     }
 
     // Cambiamos el nombre
-    strcpy(((struct directory_entry *)private_data->block[private_data->inode[new_file_number].entry_block])[private_data->inode[new_file_number].offset].name, new_name);
+    strcpy(((struct directory_entry *)private_data->block[private_data->inode[file_number].entry_block])[private_data->inode[file_number].offset].name, new_name);
 }

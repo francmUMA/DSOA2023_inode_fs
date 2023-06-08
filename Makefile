@@ -13,5 +13,6 @@ filesystem.o : filesystem.c data_structures_fs.h
 mount: filesystem_fuse
 	./filesystem_fuse $(fichero) $(montaje)
 
-umount:
+clean:
 	fusermount -u $(montaje)
+	rm -rf filesystem_fuse filesystem.o punto_montaje 

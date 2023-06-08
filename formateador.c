@@ -116,7 +116,7 @@ int main()
     // No deja crear el root
     create_root(private_data);
     touch("/pruebas",'d',private_data);
-    rmdir_fs("/pruebas",private_data);
+    rename_file("/pruebas","pruebas2",private_data);
     // Cerramos el fichero
     close(private_data->fd);
     return 0;
